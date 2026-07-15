@@ -1,0 +1,83 @@
+name: Campaign Studio CI/CD
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main]
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}/campaign-studio
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    - name: Setup Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.11'
+    - name: Install dependencies
+      run: |
+        pip install flake8 mypy
+        pip install -r requirements.txt
+    - name: Lint code
+      run: |
+        flake8 backend/src/*.py --max-line-length=100
+
+  test:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    - name: Setup Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.11'
+    - name: Install dependencies
+      run: |
+        pip install -r requirements.txt
+    - name: Run tests
+      run: |
+        pytest backend/tests/ -v --cov=src
+
+  build:
+    needs: [lint, test]
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    - name: Build Docker image
+      run: |
+        docker build -t ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }} -f backend/Dockerfile .
+        docker build -t ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.ref_name }} -f backend/Dockerfile .
+
+  deploy-staging:
+    if: github.ref == 'refs/heads/develop'
+    needs: [build]
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    - name: Deploy to staging
+      run: |
+        echo "Deploy to staging cluster"
+        # kubectl apply -f infra/k8s/ --kubeconfig=${{ secrets.STAGING_KUBE_CONFIG }}
+
+  deploy-production:
+    if: github.ref == 'refs/heads/main'
+    needs: [build]
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    - name: Deploy to production
+      run: |
+        echo "Deploy to production cluster"
+        # kubectl apply -f infra/k8s/ --kubeconfig=${{ secrets.PROD_KUBE_CONFIG }}
+
+  rollback:
+    if: failure()
+    runs-on: ubuntu-latest
+    steps:
+    - name: Rollback deployment
+      run: |
+        echo "Rolling back to previous version"

@@ -1,0 +1,26 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: campaign-studio
+  labels:
+    app: campaign-studio
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: campaign-studio
+  template:
+    metadata:
+      labels:
+        app: campaign-studio
+    spec:
+      containers:
+        - name: campaign-studio
+          image: campaign-studio:latest
+          ports:
+            - containerPort: 8000
+          env:
+            - name: PORT
+              value: "8000"
+            - name: ENVIRONMENT
+              value: "production"

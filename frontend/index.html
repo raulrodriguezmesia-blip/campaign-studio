@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Campaign Concept Studio</title>
+  <link rel="stylesheet" href="/static/styles.css" />
+</head>
+<body>
+  <div class="app-shell">
+    <header>
+      <div class="logo">Campaign Concept Studio</div>
+      <p class="subtitle">Generate campaign strategy, copy variants, launch checklist, and image direction with OpenAI.</p>
+    </header>
+
+    <main>
+      <section class="form-card">
+        <h1>Campaign Brief</h1>
+        <div class="field-grid">
+          <label>
+            Brief
+            <textarea id="campaignBrief" placeholder="Describe the campaign in a few sentences..."></textarea>
+          </label>
+
+          <label>
+            Target Audience
+            <input id="targetAudience" type="text" placeholder="e.g. urban professionals, sustainability-minded consumers" />
+          </label>
+
+          <label>
+            Product Details
+            <textarea id="productDetails" placeholder="What is the product or service? What makes it special?"></textarea>
+          </label>
+
+          <label>
+            Tone
+            <input id="tone" type="text" placeholder="e.g. bold, friendly, sophisticated" />
+          </label>
+
+          <label>
+            Channels
+            <input id="channels" type="text" placeholder="e.g. Instagram, email, events" />
+          </label>
+        </div>
+
+        <div class="button-row">
+          <button id="generateBtn">Generate Campaign</button>
+        </div>
+      </section>
+
+      <section id="status" class="status-card hidden"></section>
+
+      <section id="results" class="results hidden">
+        <div class="result-card">
+          <h2>Campaign Concept</h2>
+          <p id="campaignConcept"></p>
+        </div>
+
+        <div class="result-card">
+          <h2>Copy Variants</h2>
+          <div id="variants"></div>
+        </div>
+
+        <div class="result-card">
+          <h2>Launch Checklist</h2>
+          <ul id="checklist"></ul>
+        </div>
+
+        <div class="result-card">
+          <h2>Image Prompts</h2>
+          <div id="imagePrompts"></div>
+        </div>
+
+        <div class="result-card">
+          <h2>Generated Images</h2>
+          <div id="images" class="image-grid"></div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script src="/static/app.js"></script>
+</body>
+</html>
