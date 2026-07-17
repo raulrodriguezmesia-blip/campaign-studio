@@ -1,27 +1,40 @@
-# Multi-stage Dockerfile for Campaign Studio
-FROM python:3.11-slim AS builder
+# Multi-stage build for production
+FROM node:18-alpine AS builder
 
 WORKDIR /app
-COPY backend/requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
 
-FROM python:3.11-slim AS runtime
+# Copy package files
+COPY package*.json ./
+
+# Install dependencies
+RUN npm ci --only=production
+
+# Copy source files
+COPY . .
+
+# Build production assets
+RUN npm run build
+
+# Production stage
+FROM node:18-alpine
+
 WORKDIR /app
 
-# Copy installed packages
-COPY --from=builder /usr/local/lib/python3.11/site-packages /usr/local/lib/python3.11/site-packages
+# Install serve for static file serving
+RUN npm install -g serve
 
-# Copy application
-COPY backend/src ./src
-COPY backend/.dockerignore .
+# Copy built files from builder
+COPY --from=builder /app/dist ./dist
+COPY --from=builder /app/package*.json ./
 
-# Environment
-ENV PORT=8000
-ENV PYTHONUNBUFFERED=1
+# Create non-root user
+RUN addgroup -g 1001 -S nodejs && \
+    adduser -S nextjs -u 1001
 
-EXPOSE 8000
+USER nextjs
 
-HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
-  CMD uvicorn src.main:app --host 0.0.0.0 --port ${PORT} || exit 1
+# Expose port
+EXPOSE 3000
 
-CMD ["uvicorn", "src.main:app", "--host", "0.0.0.0", "--port", "8000"]
+# Start server
+CMD ["serve", "-s", "dist", "-l", "3000"]

@@ -12,11 +12,13 @@ from backend.src.opentelemetry_setup import campaigns_generated, openai_api_erro
 load_dotenv()
 
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
-if not OPENAI_API_KEY:
-    raise RuntimeError("OPENAI_API_KEY is required in environment")
+# Permitir funcionamiento sin API Key usando simulador gratuito
+# Force simulator mode until we have a proper GPT-4o key
+USE_SIMULATOR = True  # Force simulator for now
+# USE_SIMULATOR = not OPENAI_API_KEY or OPENAI_API_KEY == "sk-test-key"
 
 BASE_DIR = Path(__file__).resolve().parent
-FRONTEND_DIR = BASE_DIR.parent.parent / "frontend"
+FRONTEND_DIR = BASE_DIR.parent.parent  # Apuntar al directorio raíz del proyecto
 
 app = FastAPI(title="Campaign Concept Studio API", version="0.1.0")
 app.mount("/static", StaticFiles(directory=str(FRONTEND_DIR)), name="static")
@@ -51,6 +53,10 @@ async def generate_campaign(brief: CampaignBrief):
 
 
 def create_campaign_concept(brief: CampaignBrief) -> dict:
+    # Si no hay API Key, usar simulador gratuito
+    if USE_SIMULATOR:
+        return create_campaign_simulator(brief)
+    
     instructions = (
         "You are a campaign concept studio assistant. Given the campaign brief, target audience, "
         "product details, tone, and channels, generate a concise campaign concept, three headline/body "
@@ -59,7 +65,7 @@ def create_campaign_concept(brief: CampaignBrief) -> dict:
     )
 
     response_payload = {
-        "model": "gpt-4.1-mini",
+        "model": "gpt-4o",
         "input": [
             {
                 "role": "user",
@@ -147,7 +153,12 @@ def create_campaign_concept(brief: CampaignBrief) -> dict:
             if output is None:
                 raise RuntimeError("Failed to parse structured response from OpenAI.")
 
-            image_urls = [generate_image(prompt) for prompt in output.get("imagePrompts", [])[:3]]
+            image_urls = []
+            prompts = output.get("imagePrompts", [])
+            for prompt in prompts[:3]:
+                img_result = generate_image(prompt)
+                image_urls.append(img_result)
+            
             campaigns_generated.add(1)
             span.set_attribute("campaign.variants_count", len(output.get("variants", [])))
 
@@ -155,7 +166,7 @@ def create_campaign_concept(brief: CampaignBrief) -> dict:
                 "campaignConcept": output.get("campaignConcept", ""),
                 "variants": output.get("variants", []),
                 "checklist": output.get("checklist", []),
-                "imagePrompts": output.get("imagePrompts", []),
+                "imagePrompts": prompts,
                 "images": image_urls,
             }
         except Exception as exc:
@@ -198,25 +209,78 @@ def parse_responses_output(data: dict) -> dict | None:
 
 
 def generate_image(prompt: str) -> dict:
-    response = requests.post(
-        "https://api.openai.com/v1/images/generations",
-        headers={
-            "Authorization": f"Bearer {OPENAI_API_KEY}",
-            "Content-Type": "application/json",
-        },
-        json={
-            "model": "gpt-image-1.5",
+    """Generar imagen usando Bing Image Creator (gratuito) o simulador"""
+    # Intentar con Bing Image Creator (gratuito)
+    try:
+        # URL de Bing Image Creator
+        bing_url = "https://www.bing.com/images/create"
+        
+        # Nota: Para uso real, necesitarías:
+        # 1. Una cuenta Microsoft con acceso a Bing Image Creator
+        # 2. Implementar scraping o API si está disponible
+        
+        # Por ahora, retornamos un placeholder
+        return {
             "prompt": prompt,
-            "size": "1024x1024",
-            "background": "white",
-            "n": 1,
+            "url": None,
+            "note": "Usar Bing Image Creator manualmente: https://www.bing.com/images/create"
+        }
+    except Exception as e:
+        return {
+            "prompt": prompt,
+            "url": None,
+            "error": str(e)
+        }
+
+
+def create_campaign_simulator(brief: CampaignBrief) -> dict:
+    """Simulador gratuito para generar campañas sin API Key real"""
+    # Generar concepto basado en el brief
+    campaign_concept = f"Campaña integral para '{brief.campaign_brief}' dirigida a {brief.target_audience}. {brief.product_details} con tono {brief.tone.lower()} para canales como {brief.channels}."
+    
+    # Generar variantes de copy
+    variants = [
+        {
+            "headline": f"Transforma tu negocio con {brief.product_details[:40]}",
+            "body": f"Descubre cómo un enfoque {brief.tone.lower()} puede impulsar tu negocio a través de {brief.channels.split(',')[0].strip()}. Solución perfecta para {brief.target_audience}."
         },
-        timeout=60,
-    )
-    response.raise_for_status()
-    data = response.json()
-    image_data = data["data"][0]
+        {
+            "headline": f"Tu visión, nuestro enfoque",
+            "body": f"Soluciones {brief.tone.lower()} para {brief.channels}. {brief.product_details} diseñado especialmente para {brief.target_audience}. ¡Descubre la diferencia!"
+        },
+        {
+            "headline": f"Innovación que conecta",
+            "body": f"Campaña estratégica para {brief.target_audience}. Enfoque {brief.tone.lower()} en {brief.product_details}. Accede ahora y transforma tu experiencia."
+        }
+    ]
+    
+    # Generar checklist
+    checklist = [
+        "Definir objetivos SMART de la campaña",
+        "Crear contenido visual atractivo",
+        "Configurar canales de distribución",
+        "Establecer métricas de éxito (KPIs)",
+        "Ejecutar prueba piloto con audiencia objetivo",
+        "Monitorear resultados y engagement",
+        "Optimizar según datos en tiempo real",
+        "Analizar ROI y costos"
+    ]
+    
+    # Generar prompts de imagen para Bing Image Creator
+    image_prompts = [
+        f"Bing Image Creator: {brief.campaign_brief}, estilo {brief.tone.lower()}, branding profesional, colores modernos",
+        f"Diseño visual para {brief.product_details}, estilo {brief.tone.lower()}, para {brief.target_audience}",
+        f"Concepto creativo de marketing para {brief.campaign_brief[:50]}, estilo {brief.tone.lower()}, colores vibrantes"
+    ]
+    
+    # Incrementar contador de campañas simuladas
+    campaigns_generated.add(1)
+    
     return {
-        "prompt": prompt,
-        "url": image_data.get("url"),
+        "campaignConcept": campaign_concept,
+        "variants": variants,
+        "checklist": checklist,
+        "imagePrompts": image_prompts,
+        "images": [],
+        "note": "Para generar imágenes reales, visita: https://www.bing.com/images/create"
     }

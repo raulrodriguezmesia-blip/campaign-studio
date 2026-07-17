@@ -1,0 +1,426 @@
+/* ============================================
+   CHART.JS STYLES & ANIMATIONS
+   ============================================ */
+
+/* Chart.js Custom Styles */
+.chart-card {
+    background: var(--bg-card);
+    border-radius: var(--border-radius);
+    padding: 24px;
+    box-shadow: var(--shadow);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    margin-bottom: 24px;
+}
+
+.chart-card h3 {
+    font-size: 1.125rem;
+    font-weight: 600;
+    margin-bottom: 16px;
+    color: var(--text-light);
+}
+
+/* Chart Canvas */
+.chart-card canvas {
+    width: 100% !important;
+    height: 200px !important;
+}
+
+/* Chart.js Dark Theme */
+ Chart.defaults.color = '#94a3b8';
+Chart.defaults.font.family = 'Inter, system-ui, sans-serif';
+Chart.defaults.font.size = 12;
+
+Chart.defaults.borderColor = 'rgba(255, 255, 255, 0.1)';
+
+/* Bar Chart Options */
+Chart.defaults.bar.scales.y.beginAtZero = true;
+Chart.defaults.bar.scales.y.grid.color = 'rgba(255, 255, 255, 0.05)';
+
+/* Line Chart Options */
+Chart.defaults.line.scales.y.beginAtZero = false;
+Chart.defaults.line.scales.y.grid.color = 'rgba(255, 255, 255, 0.05)';
+Chart.defaults.line.tension = 0.4;
+
+/* Doughnut Chart Options */
+Chart.defaults.doughnut.borderWidth = 0;
+
+/* Animation Keyframes */
+@keyframes fadeOut {
+    from { opacity: 1; transform: translateY(0); }
+    to { opacity: 0; transform: translateY(-20px); }
+}
+
+@keyframes shimmer {
+    0% { background-position: -200% 0; }
+    100% { background-position: 200% 0; }
+}
+
+@keyframes pulse-glow {
+    0% { box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.4); }
+    50% { box-shadow: 0 0 0 15px rgba(59, 130, 246, 0); }
+    100% { box-shadow: 0 0 0 0 rgba(59, 130, 246, 0); }
+}
+
+@keyframes gradient-shift {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+}
+
+/* Neon Glow Effects */
+.neon-glow {
+    box-shadow: 0 0 10px rgba(59, 130, 246, 0.5);
+    transition: all 0.3s ease;
+}
+
+.neon-glow:hover {
+    box-shadow: 0 0 20px rgba(59, 130, 246, 0.8);
+    transform: scale(1.02);
+}
+
+/* Button Glow */
+.btn-primary {
+    position: relative;
+    overflow: hidden;
+    transition: all 0.3s ease;
+}
+
+.btn-primary::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+    transition: 0.5s;
+}
+
+.btn-primary:hover::before {
+    left: 100%;
+}
+
+/* Input Focus Glow */
+.form-group input:focus,
+.form-group textarea:focus {
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.3);
+    border-color: rgba(59, 130, 246, 0.5);
+}
+
+/* Card Hover Effects */
+.card-hover {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.card-hover:hover {
+    transform: translateY(-8px);
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+}
+
+/* Glass Effect */
+.glass-effect {
+    background: rgba(255, 255, 255, 0.05);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* Gradient Text */
+.gradient-text {
+    background: linear-gradient(90deg, var(--neon-blue), var(--neon-purple));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    background-size: 200% 200%;
+    animation: gradient-shift 3s ease infinite;
+}
+
+/* Neon Borders */
+.neon-border {
+    border: 1px solid var(--neon-blue);
+    position: relative;
+}
+
+.neon-border::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(90deg, var(--neon-blue), var(--neon-purple));
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    z-index: -1;
+    filter: blur(5px);
+}
+
+.neon-border:hover::before {
+    opacity: 0.5;
+}
+
+/* Pulse Animation */
+.pulse {
+    animation: pulse-glow 2s infinite;
+}
+
+/* Shimmering Effect */
+.shimmer-text {
+    background: linear-gradient(90deg, #f6f8fa 25%, #e1e4e8 50%, #f6f8fa 75%);
+    background-size: 200% 100%;
+    animation: shimmer 2s linear infinite;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+/* Responsive Chart Adjustments */
+@media (max-width: 768px) {
+    .chart-card {
+        margin-bottom: 16px;
+    }
+    
+    .charts-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .form-container {
+        grid-template-columns: 1fr;
+    }
+    
+    .metrics-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (max-width: 480px) {
+    .metrics-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .section {
+        padding: 16px;
+    }
+    
+    .sidebar {
+        width: 240px;
+    }
+}
+
+/* Empty State Styles */
+.empty-state {
+    text-align: center;
+    padding: 48px 24px;
+    color: var(--text-muted);
+}
+
+.empty-state h3 {
+    font-size: 1.5rem;
+    margin-bottom: 12px;
+    color: var(--text-light);
+}
+
+.empty-state p {
+    font-size: 1rem;
+}
+
+/* Variant Item */
+.variant-item {
+    background: rgba(0, 0, 0, 0.3);
+    padding: 12px;
+    border-radius: 8px;
+    margin-bottom: 8px;
+    font-family: 'Monaco', 'Menlo', monospace;
+}
+
+.prompt-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: rgba(0, 0, 0, 0.3);
+    padding: 12px;
+    border-radius: 8px;
+    margin-bottom: 8px;
+}
+
+.prompt-code {
+    font-family: 'Monaco', 'Menlo', monospace;
+    font-size: 0.875rem;
+    color: var(--neon-blue);
+}
+
+.copy-prompt {
+    background: transparent;
+    border: none;
+    color: var(--text-muted);
+    cursor: pointer;
+    padding: 4px;
+    transition: var(--transition);
+}
+
+.copy-prompt:hover {
+    color: var(--primary);
+}
+
+/* Copy Button Active State */
+.copy-btn.active {
+    color: var(--primary);
+    transform: scale(1.2);
+}
+
+/* Notification Styles */
+.notification {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    padding: 12px 24px;
+    border-radius: 8px;
+    color: white;
+    font-weight: 500;
+    z-index: 2000;
+    animation: fadeIn 0.3s ease-out;
+}
+
+.notification-success {
+    background: linear-gradient(135deg, #10b981, #059669);
+}
+
+.notification-error {
+    background: linear-gradient(135deg, #ef4444, #dc2626);
+}
+
+.notification-info {
+    background: linear-gradient(135deg, #3b82f6, #2563eb);
+}
+
+/* Scroll Animations */
+.animate-on-scroll {
+    opacity: 0;
+    transform: translateY(20px);
+    transition: opacity 0.6s ease, transform 0.6s ease;
+}
+
+.animate-on-scroll.visible {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+/* Loading Spinner Container */
+.spinner-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+}
+
+.spinner {
+    width: 40px;
+    height: 40px;
+    border: 3px solid rgba(255, 255, 255, 0.1);
+    border-top-color: var(--neon-blue);
+    border-radius: 50%;
+    animation: rotate 1s linear infinite;
+}
+
+/* Modal Sizes */
+.modal-small {
+    max-width: 350px;
+}
+
+.modal-medium {
+    max-width: 500px;
+}
+
+.modal-large {
+    max-width: 700px;
+}
+
+.modal-content {
+    background: var(--bg-card);
+    border-radius: var(--border-radius);
+    box-shadow: var(--shadow);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+/* Dark mode adjustments */
+@media (prefers-color-scheme: dark) {
+    .chart-card {
+        background: rgba(26, 26, 46, 0.8);
+    }
+    
+    .campaign-card,
+    .metric-card {
+        background: rgba(26, 26, 46, 0.8);
+    }
+}
+
+/* Prompt Note */
+.prompt-note {
+    margin-top: 16px;
+    padding: 12px;
+    background: rgba(59, 130, 246, 0.1);
+    border-radius: 8px;
+    border-left: 3px solid var(--primary);
+}
+
+.note-text {
+    color: var(--text-muted);
+    font-size: 0.875rem;
+    margin-bottom: 8px;
+}
+
+.note-text a {
+    color: var(--primary);
+    text-decoration: none;
+    font-weight: 500;
+}
+
+.note-text a:hover {
+    text-decoration: underline;
+    color: var(--accent);
+}
+
+/* Variant Item Updated */
+.variant-item {
+    background: rgba(0, 0, 0, 0.3);
+    padding: 12px;
+    border-radius: 8px;
+    margin-bottom: 8px;
+}
+
+.variant-item strong {
+    color: var(--neon-blue);
+    display: block;
+    margin-bottom: 4px;
+}
+
+/* Prompt Item Updated */
+.prompt-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    background: rgba(0, 0, 0, 0.3);
+    padding: 12px;
+    border-radius: 8px;
+    margin-bottom: 8px;
+}
+
+.prompt-code {
+    font-family: 'Monaco', 'Menlo', monospace;
+    font-size: 0.875rem;
+    color: var(--neon-purple);
+    line-height: 1.4;
+}
+
+.copy-prompt {
+    background: transparent;
+    border: none;
+    color: var(--text-muted);
+    cursor: pointer;
+    padding: 4px;
+    transition: var(--transition);
+    flex-shrink: 0;
+}
+
+.copy-prompt:hover {
+    color: var(--primary);
+}

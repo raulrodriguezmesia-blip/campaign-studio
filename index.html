@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Campaign Studio - Plataforma AI</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="charts.css">
+    <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+</head>
+<body>
+    <!-- Overlay de loading -->
+    <div id="loading-overlay" class="overlay hidden">
+        <div class="spinner"></div>
+    </div>
+
+    <!-- Sidebar -->
+    <aside class="sidebar" id="sidebar">
+        <div class="logo">
+            <img src="assets/logo.svg" alt="Campaign Studio">
+            <h1>Campaign <span class="gradient-text">Studio</span></h1>
+        </div>
+        
+        <nav class="nav-menu">
+            <a href="#dashboard" class="nav-item active" data-section="dashboard">
+                <span class="icon">📊</span>
+                <span>Dashboard</span>
+            </a>
+            <a href="#create" class="nav-item" data-section="create">
+                <span class="icon">➕</span>
+                <span>Crear Campaña</span>
+            </a>
+            <a href="#campaigns" class="nav-item" data-section="campaigns">
+                <span class="icon">📁</span>
+                <span>Mis Campañas</span>
+            </a>
+            <a href="#analytics" class="nav-item" data-section="analytics">
+                <span class="icon">📈</span>
+                <span>Analytics</span>
+            </a>
+            <a href="#settings" class="nav-item" data-section="settings">
+                <span class="icon">⚙️</span>
+                <span>Configuración</span>
+            </a>
+        </nav>
+
+        <div class="status-bar">
+            <div class="status-indicator" id="connection-status">
+                <span class="dot online"></span>
+                <span>Conectado al backend</span>
+            </div>
+        </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <!-- Header -->
+        <header class="header">
+            <div class="search-bar">
+                <input type="text" id="search-input" placeholder="Buscar campañas...">
+                <button class="search-btn">🔍</button>
+            </div>
+            <div class="user-menu">
+                <button id="demo-btn" class="btn btn-primary">🎯 Ver Demo</button>
+                <button id="api-key-btn" class="btn btn-outline">Configurar API Key</button>
+                <div class="user-avatar">👤</div>
+            </div>
+        </header>
+
+        <!-- Dashboard Section -->
+        <section class="section active" id="dashboard">
+            <div class="dashboard-header">
+                <h2>Dashboard de Campañas</h2>
+                <p class="subtitle">Monitorea el rendimiento de tus campañas en tiempo real</p>
+            </div>
+
+            <div class="metrics-grid">
+                <div class="metric-card animate-fade-in">
+                    <div class="metric-icon">🚀</div>
+                    <div class="metric-content">
+                        <h3>Campañas Generadas</h3>
+                        <p class="metric-value" id="total-campaigns">0</p>
+                        <p class="metric-change positive">+0% este mes</p>
+                    </div>
+                </div>
+
+                <div class="metric-card animate-fade-in">
+                    <div class="metric-icon">🖼️</div>
+                    <div class="metric-content">
+                        <h3>Imágenes Generadas</h3>
+                        <p class="metric-value" id="total-images">0</p>
+                        <p class="metric-change positive">+0% esta semana</p>
+                    </div>
+                </div>
+
+                <div class="metric-card animate-fade-in">
+                    <div class="metric-icon">⚡</div>
+                    <div class="metric-content">
+                        <h3>Errores API</h3>
+                        <p class="metric-value" id="api-errors">0</p>
+                        <p class="metric-change negative">0 errores críticos</p>
+                    </div>
+                </div>
+
+                <div class="metric-card animate-fade-in">
+                    <div class="metric-icon">💰</div>
+                    <div class="metric-content">
+                        <h3>Gasto Estimado</h3>
+                        <p class="metric-value" id="total-cost">$0.00</p>
+                        <p class="metric-change positive">-0% vs mes pasado</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Charts Grid -->
+            <div class="charts-grid">
+                <div class="chart-card animate-fade-in">
+                    <h3>Campañas por Tipo</h3>
+                    <canvas id="campaigns-chart"></canvas>
+                </div>
+                <div class="chart-card animate-fade-in">
+                    <h3>Conversión de Campañas</h3>
+                    <canvas id="conversion-chart"></canvas>
+                </div>
+                <div class="chart-card animate-fade-in">
+                    <h3>Distribución de Costos</h3>
+                    <canvas id="cost-chart"></canvas>
+                </div>
+            </div>
+        </section>
+
+        <!-- Create Campaign Section -->
+        <section class="section" id="create">
+            <div class="section-header">
+                <h2>Crear Nueva Campaña</h2>
+                <p class="subtitle">Genera campañas completas con IA en segundos</p>
+            </div>
+
+            <div class="form-container">
+                <form id="campaign-form" class="campaign-form">
+                    <div class="form-group">
+                        <label for="campaign-brief">Brief de Campaña *</label>
+                        <textarea id="campaign-brief" name="campaign_brief" rows="3" placeholder="Describe tu campaña..." required></textarea>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="target-audience">Público Objetivo *</label>
+                            <input type="text" id="target-audience" name="target_audience" placeholder="Ej: Millennials urbanos..." required>
+                        </div>
+                        <div class="form-group">
+                            <label for="product-details">Detalles del Producto *</label>
+                            <input type="text" id="product-details" name="product_details" placeholder="Describe tu producto..." required>
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="tone">Tono *</label>
+                            <input type="text" id="tone" name="tone" placeholder="Ej: Profesional, Amigable..." required>
+                        </div>
+                        <div class="form-group">
+                            <label for="channels">Canales *</label>
+                            <input type="text" id="channels" name="channels" placeholder="Ej: Instagram, Email..." required>
+                        </div>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary btn-lg">
+                        <span id="btn-text">Generar Campaña</span>
+                        <span id="loading-text" class="hidden">Generando...</span>
+                    </button>
+                </form>
+
+                <!-- Result Card -->
+                <div class="result-card hidden" id="result-card">
+                    <div class="result-header">
+                        <h3>Resultado Generado</h3>
+                        <button class="copy-btn" id="copy-result">📋</button>
+                    </div>
+                    <div class="result-content">
+                        <div class="concept-section">
+                            <h4>Concepto</h4>
+                            <p id="campaign-concept"></p>
+                        </div>
+                        
+                        <div class="variants-section">
+                            <h4>Variantes de Copy</h4>
+                            <div id="variants-container"></div>
+                        </div>
+                        
+                        <div class="checklist-section">
+                            <h4>Checklist</h4>
+                            <ul id="checklist-container"></ul>
+                        </div>
+                        
+                        <div class="prompts-section">
+                            <h4>Prompts para Imágenes</h4>
+                            <div id="prompts-container"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Campaigns List Section -->
+        <section class="section" id="campaigns">
+            <div class="section-header">
+                <h2>Mis Campañas</h2>
+                <p class="subtitle">Gestiona y edita tus campañas generadas</p>
+            </div>
+            
+            <div class="campaigns-grid" id="campaigns-grid">
+                <!-- Campañas se cargan dinámicamente -->
+            </div>
+        </section>
+    </main>
+
+    <!-- Modal para API Key -->
+    <div class="modal hidden" id="api-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Configurar API Key</h3>
+                <button class="close-btn" id="close-modal">✕</button>
+            </div>
+            <div class="modal-body">
+                <p>Configura tu API Key de OpenAI para usar el modelo real</p>
+                <input type="password" id="api-key-input" class="form-control" placeholder="sk-...">
+                <button id="save-api-key" class="btn btn-primary">Guardar</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="components.js"></script>
+    <script src="app.js"></script>
+    <script>
+        // Inicializar aplicación cuando el DOM esté listo
+        document.addEventListener('DOMContentLoaded', function() {
+            if (typeof window.campaignStudio === 'undefined') {
+                window.campaignStudio = new CampaignStudio();
+            }
+        });
+    </script>
+</body>
+</html>

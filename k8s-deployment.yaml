@@ -1,0 +1,149 @@
+# Campaign Studio - Kubernetes Deployment
+# Frontend + Backend en un solo servicio
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: campaign-studio
+  labels:
+    app: campaign-studio
+    tier: frontend
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: campaign-studio
+  template:
+    metadata:
+      labels:
+        app: campaign-studio
+        tier: frontend
+    spec:
+      containers:
+      - name: campaign-studio
+        image: nginx:alpine
+        ports:
+        - containerPort: 80
+        volumeMounts:
+        - name: frontend-files
+          mountPath: /usr/share/nginx/html
+        - name: nginx-config
+          mountPath: /etc/nginx/conf.d
+      - name: backend
+        image: python:3.11-slim
+        ports:
+        - containerPort: 8000
+        env:
+        - name: OPENAI_API_KEY
+          valueFrom:
+            secretKeyRef:
+              name: openai-secret
+              key: api-key
+        - name: PYTHONUNBUFFERED
+          value: "1"
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "250m"
+          limits:
+            memory: "512Mi"
+            cpu: "500m"
+        volumeMounts:
+        - name: backend-code
+          mountPath: /app
+      volumes:
+      - name: frontend-files
+        configMap:
+          name: campaign-studio-frontend
+      - name: nginx-config
+        configMap:
+          name: campaign-studio-nginx
+      - name: backend-code
+        emptyDir: {}
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: campaign-studio-frontend
+data:
+  index.html: |
+    <!-- HTML content from index.html -->
+  styles.css: |
+    /* CSS content from styles.css */
+  charts.css: |
+    /* CSS content from charts.css */
+  components.js: |
+    /* JS content from components.js */
+  app.js: |
+    /* JS content from app.js */
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: campaign-studio-nginx
+data:
+  default.conf: |
+    server {
+        listen 80;
+        server_name localhost;
+        
+        location / {
+            root /usr/share/nginx/html;
+            index index.html;
+            try_files $uri $uri/ =404;
+        }
+        
+        location /api/ {
+            proxy_pass http://localhost:8000/api/;
+            proxy_set_header Host $host;
+            proxy_set_header X-Real-IP $remote_addr;
+        }
+    }
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: openai-secret
+type: Opaque
+data:
+  api-key: <base64-encoded-api-key>
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: campaign-studio-service
+spec:
+  selector:
+    app: campaign-studio
+  ports:
+  - name: http
+    port: 80
+    targetPort: 80
+  - name: api
+    port: 8000
+    targetPort: 8000
+  type: LoadBalancer
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: campaign-studio-ingress
+  annotations:
+    nginx.ingress.kubernetes.io/rewrite-target: /
+    cert-manager.io/cluster-issuer: "letsencrypt-prod"
+spec:
+  tls:
+  - hosts:
+    - campaign-studio.example.com
+    secretName: campaign-studio-tls
+  rules:
+  - host: campaign-studio.example.com
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: campaign-studio-service
+            port:
+              number: 80

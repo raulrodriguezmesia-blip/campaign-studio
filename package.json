@@ -1,0 +1,56 @@
+{
+  "name": "campaign-studio-frontend",
+  "version": "1.0.0",
+  "description": "AI-powered campaign generation platform with futuristic UI",
+  "keywords": [
+    "campaign",
+    "ai",
+    "marketing",
+    "generator",
+    "futuristic",
+    "dashboard",
+    "svelte",
+    "web-components"
+  ],
+  "author": "Raul Rodriguez",
+  "license": "MIT",
+  "scripts": {
+    "dev": "live-server --port=8080 --host=localhost",
+    "build": "npm run build:js && npm run build:css && npm run build:html",
+    "build:js": "node scripts/build-js.js",
+    "build:css": "node scripts/build-css.js",
+    "build:html": "node scripts/build-html.js",
+    "clean": "node -e \"require('fs').rmSync('dist',{recursive:true,force:true})\"",
+    "serve:k8s": "kubectl apply -f k8s-deployment.yaml",
+    "preview": "npx serve . -p 8080",
+    "test": "jest",
+    "lint": "eslint src/**/*.js",
+    "type-check": "tsc --noEmit",
+    "deploy": "vercel --prod",
+    "deploy-netlify": "netlify deploy --prod"
+  },
+  "dependencies": {
+    "chart.js": "^4.4.0"
+  },
+  "devDependencies": {
+    "live-server": "^1.2.2",
+    "csso": "^5.0.5",
+    "terser": "^5.31.0",
+    "serve": "^14.2.0",
+    "eslint": "^8.57.0",
+    "jest": "^29.7.0",
+    "vercel": "^32.0.0",
+    "netlify-cli": "^17.0.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/raulrodriguezmesia-blip/campaign-studio"
+  },
+  "homepage": "https://campaignstudio.dev",
+  "bugs": {
+    "url": "https://github.com/raulrodriguezmesia-blip/campaign-studio/issues"
+  }
+}
