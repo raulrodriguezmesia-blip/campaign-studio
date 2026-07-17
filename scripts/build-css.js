@@ -7,13 +7,14 @@ const path = require('path');
 const csso = require('csso');
 
 const root = path.resolve(__dirname, '..');
+const srcDir = path.join(root, 'frontend');
 const distDir = path.join(root, 'dist');
 
 const inputs = ['styles.css', 'charts.css'];
 
 let combined = '';
 for (const file of inputs) {
-  const filePath = path.join(root, file);
+  const filePath = path.join(srcDir, file);
   if (!fs.existsSync(filePath)) {
     console.warn(`[build-css] warning: ${file} not found, skipping`);
     continue;

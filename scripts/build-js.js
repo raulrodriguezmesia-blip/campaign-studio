@@ -7,6 +7,7 @@ const path = require('path');
 const terser = require('terser');
 
 const root = path.resolve(__dirname, '..');
+const srcDir = path.join(root, 'frontend');
 const distDir = path.join(root, 'dist');
 
 const inputs = ['components.js', 'app.js'];
@@ -14,7 +15,7 @@ const inputs = ['components.js', 'app.js'];
 const sources = {};
 let combined = '';
 for (const file of inputs) {
-  const filePath = path.join(root, file);
+  const filePath = path.join(srcDir, file);
   if (!fs.existsSync(filePath)) {
     console.warn(`[build-js] warning: ${file} not found, skipping`);
     continue;

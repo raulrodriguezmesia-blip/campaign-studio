@@ -15,8 +15,9 @@ const fs = require('fs');
 const path = require('path');
 
 const root = path.resolve(__dirname, '..');
+const srcDir = path.join(root, 'frontend');
 const distDir = path.join(root, 'dist');
-const srcHtml = path.join(root, 'index.html');
+const srcHtml = path.join(srcDir, 'index.html');
 
 if (!fs.existsSync(distDir)) {
   fs.mkdirSync(distDir, { recursive: true });
@@ -58,7 +59,7 @@ fs.writeFileSync(outHtml, html, 'utf8');
 console.log(`[build-html] -> ${outHtml}`);
 
 // --- Copy assets directory if present ---
-const assetsSrc = path.join(root, 'assets');
+const assetsSrc = path.join(srcDir, 'assets');
 const assetsDst = path.join(distDir, 'assets');
 if (fs.existsSync(assetsSrc)) {
   fs.cpSync(assetsSrc, assetsDst, { recursive: true });
