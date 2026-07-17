@@ -1,25 +1,42 @@
 # Campaign Studio
 
+![Live](https://img.shields.io/badge/live%20demo-campaign--studio--new.vercel.app-blue)
 ![Build Status](https://img.shields.io/badge/build-passing-brightgreen)
 ![Docker Ready](https://img.shields.io/badge/docker-ready-blue)
 ![CI/CD](https://img.shields.io/badge/ci--cd-automated-orange)
 ![License](https://img.shields.io/badge/license-MIT-lightgrey)
 
+> 🚀 **Live demo:** https://campaign-studio-new.vercel.app/
+
+## 🌟 Portfolio Highlight
+
+| | |
+|---|---|
+| **What it is** | AI-powered platform that turns a marketing brief into a complete campaign concept (copy variants, launch checklist, image prompts) in seconds. |
+| **Role** | Solo full-stack build: frontend, backend, build pipeline, CI/CD and cloud deployment. |
+| **Stack** | FastAPI + Uvicorn (Python), vanilla JS frontend (HTML5/CSS3/ES6+), Chart.js, OpenAI API with a no-key simulator mode. |
+| **Deployment** | Static build (`npm run build` → `dist/`) auto-deployed to Vercel on every push to `main`. |
+| **Highlights** | Production build pipeline (CSS/JS minification), GitHub Actions CI/CD, Docker + Kubernetes manifests, PWA, OpenTelemetry-ready backend, full security hygiene (secrets out of repo). |
+| **Live** | https://campaign-studio-new.vercel.app/ |
+
+---
+
 ## Executive Summary
 
-**Campaign Studio** is a revolutionary AI-powered platform that transforms marketing briefs into complete campaign concepts in seconds. Built with enterprise-grade architecture and cloud-native deployment.
+**Campaign Studio** is an AI-powered platform that transforms marketing briefs into complete campaign concepts in seconds. Built with a clean full-stack architecture and cloud-native, automated deployment.
 
 ---
 
 ## 🚀 Features
 
-| Feature | Enterprise Value | Technology |
-|---------|-----------------|------------|
-| **AI Content Generation** | 90% time reduction | OpenAI GPT-4o |
-| **Futuristic UI/UX** | Premium experience | HTML5/CSS3/JS |
-| **Simulator Mode** | No API Key required | Vanilla JavaScript |
-| **Real-time Analytics** | Interactive dashboards | Chart.js |
-| **Local Storage** | Offline functionality | Web Storage API |
+| Feature | Value | Technology |
+|---------|--------|------------|
+| **AI Content Generation** | Campaign concept, copy variants, checklist, image prompts | OpenAI API (simulator mode, no key required) |
+| **Futuristic UI/UX** | Premium neon/dark dashboard | HTML5 / CSS3 / JS ES6+ |
+| **Simulator Mode** | Works without an API key | Vanilla JavaScript |
+| **Real-time Analytics** | Interactive dashboards | Chart.js 4.x |
+| **Local Storage** | Campaigns persist offline | Web Storage API |
+| **PWA** | Installable, offline shell | manifest.json + service worker |
 
 ---
 
@@ -27,13 +44,14 @@
 
 | Component | Technology |
 |-----------|------------|
-| Runtime | Node.js 18+, Python 3.11 |
-| Frontend | HTML5, CSS3, JavaScript ES6+ |
+| Runtime | Node.js 20+, Python 3.11 |
+| Frontend | HTML5, CSS3, JavaScript ES6+ (no framework) |
 | Backend | FastAPI, Uvicorn |
-| AI Models | OpenAI GPT-4o, gpt-image-1 |
+| AI Models | OpenAI API (GPT-4o family) with simulator fallback |
 | Charts | Chart.js 4.x |
-| Deployment | Vercel, Netlify, Kubernetes |
+| Deployment | Vercel (static), Docker, Kubernetes |
 | CI/CD | GitHub Actions |
+| Observability | OpenTelemetry (traces + metrics) |
 
 ---
 
@@ -41,16 +59,18 @@
 
 ```mermaid
 graph TD
-    A[User] --> B[Frontend React-like]
-    B --> C[FastAPI Backend]
-    C --> D[OpenAI GPT-4o]
-    C --> E[LocalStorage]
-    C --> F[OpenTelemetry]
+    A[User Browser] --> B[Frontend - vanilla JS + Chart.js]
+    B --> C[FastAPI Backend - Uvicorn]
+    C -->|if key set| D[OpenAI API]
+    C -->|no key| E[Simulator Mode]
+    B --> F[LocalStorage]
+    C --> G[OpenTelemetry]
     
     style A fill:#3b82f6
     style B fill:#8b5cf6
     style C fill:#ec4899
     style D fill:#10b981
+    style E fill:#f59e0b
 ```
 
 ---
@@ -83,19 +103,22 @@ npm run dev
 
 ## 🚀 Deployment
 
-### Vercel (Recommended)
-```bash
-# Deploy with custom domain
-vercel --name campaignstudio.dev --prod
+The static frontend is built with `npm run build` (outputs to `dist/`) and auto-deployed to **Vercel** on every push to `main`.
 
-# Connect custom domain
-vercel domains add campaignstudio.dev
+### Vercel (current host)
+```bash
+# Local preview of the production build
+npm run build
+npx serve dist -p 8080
+
+# Or connect the repo to Vercel (zero-config):
+#   Build Command: npm run build
+#   Output Directory: dist
 ```
 
-### Netlify
+### Netlify (alternative)
 ```bash
-# Deploy to Netlify
-netlify deploy --prod
+netlify deploy --prod --dir=dist
 ```
 
 ### Docker
@@ -120,12 +143,16 @@ kubectl port-forward svc/campaign-studio 8080:80
 
 ## 📈 Performance
 
+The production build minifies all assets:
+
 | Metric | Value |
 |--------|-------|
-| Lighthouse Score | >95 |
-| First Contentful Paint | <1.2s |
-| Time to Interactive | <2.0s |
-| Bundle Size | <200KB |
+| CSS bundle | ~15 KB (gzip-friendly, minified) |
+| JS bundle | ~19 KB (minified) |
+| Charts | Chart.js 4.x via CDN |
+| PWA | Installable, offline shell |
+
+> Run Lighthouse locally for exact scores: `npx lighthouse https://campaign-studio-new.vercel.app/ --view`
 
 ---
 
@@ -172,13 +199,13 @@ npm run type-check
 ## 🎓 For Recruiters
 
 ### Skills Demonstrated:
-- ✅ Full-stack architecture
-- ✅ AI integration (OpenAI)
-- ✅ Modern frontend frameworks
-- ✅ Cloud-native deployment
-- ✅ CI/CD pipeline automation
-- ✅ Performance optimization
-- ✅ Security best practices
+- ✅ Full-stack architecture (FastAPI backend + vanilla-JS frontend)
+- ✅ AI integration (OpenAI API with no-key simulator fallback)
+- ✅ Production build pipeline (CSS/JS minification → `dist/`)
+- ✅ Cloud-native deployment (Vercel auto-deploy + Docker + Kubernetes)
+- ✅ CI/CD pipeline automation (GitHub Actions)
+- ✅ PWA & performance optimization
+- ✅ Security best practices (secrets out of repo, `.gitignore` hygiene)
 
 ### Technologies Used:
 - **Frontend**: HTML5, CSS3, JavaScript ES6+
