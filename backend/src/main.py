@@ -59,92 +59,53 @@ async def config():
     }
 
 
-@app.post("/api/generate")
-async def generate_campaign(brief: CampaignBrief):
-    try:
-        response_payload = create_campaign_concept(brief)
-        return JSONResponse(content=response_payload)
-    except Exception as exc:
-        raise HTTPException(status_code=500, detail=str(exc))
+    @app.post("/api/generate")
+    async def generate_campaign(brief: CampaignBrief):
+        try:
+            response_payload = create_campaign_concept(brief)
+            return JSONResponse(content=response_payload)
+        except Exception as exc:
+            detail = str(exc)
+            # Try to expose OpenAI's real error body for debugging.
+            try:
+                if hasattr(exc, "response") and exc.response is not None:
+                    body = exc.response.json()
+                    detail = body.get("error", {}).get("message") or detail
+            except Exception:
+                pass
+            raise HTTPException(status_code=500, detail=detail)
 
 
 def create_campaign_concept(brief: CampaignBrief) -> dict:
     # Si no hay API Key, usar simulador gratuito
     if USE_SIMULATOR:
         return create_campaign_simulator(brief)
-    
-    instructions = (
+
+    system_prompt = (
         "You are a campaign concept studio assistant. Given the campaign brief, target audience, "
         "product details, tone, and channels, generate a concise campaign concept, three headline/body "
-        "copy variants, a launch checklist, and three image prompts for campaign direction. Return "
-        "structured JSON only."
+        "copy variants, a launch checklist, and three image prompts for campaign direction. "
+        "Respond with JSON only."
+    )
+    user_prompt = (
+        f"Campaign Brief: {brief.campaign_brief}\n"
+        f"Target Audience: {brief.target_audience}\n"
+        f"Product Details: {brief.product_details}\n"
+        f"Tone: {brief.tone}\n"
+        f"Channels: {brief.channels}\n\n"
+        "Respond with JSON only under the keys: campaignConcept, variants, checklist, imagePrompts. "
+        "campaignConcept is a short summary. variants is an array of 3 objects with 'headline' and 'body'. "
+        "checklist is an array of tasks. imagePrompts is an array of 3 strings."
     )
 
     response_payload = {
-        "model": "gpt-4o",
-        "input": [
-            {
-                "role": "user",
-                "content": [
-                    {"type": "text", "text": instructions},
-                    {
-                        "type": "text",
-                        "text": (
-                            f"Campaign Brief: {brief.campaign_brief}\n"
-                            f"Target Audience: {brief.target_audience}\n"
-                            f"Product Details: {brief.product_details}\n"
-                            f"Tone: {brief.tone}\n"
-                            f"Channels: {brief.channels}\n"
-                        ),
-                    },
-                    {
-                        "type": "text",
-                        "text": (
-                            "Respond with JSON only under the keys: campaignConcept, variants, checklist, "
-                            "imagePrompts. campaignConcept is a short summary. variants is an array of 3 objects "
-                            "with headline and body. checklist is an array of tasks. imagePrompts is an array of 3 strings."
-                        ),
-                    },
-                ],
-            }
+        "model": "gpt-4o-mini",
+        "messages": [
+            {"role": "system", "content": system_prompt},
+            {"role": "user", "content": user_prompt},
         ],
-        "response_format": {
-            "type": "json_schema",
-            "json_schema": {
-                "name": "campaign_concept_schema",
-                "schema": {
-                    "type": "object",
-                    "properties": {
-                        "campaignConcept": {"type": "string"},
-                        "variants": {
-                            "type": "array",
-                            "minItems": 3,
-                            "maxItems": 3,
-                            "items": {
-                                "type": "object",
-                                "properties": {
-                                    "headline": {"type": "string"},
-                                    "body": {"type": "string"},
-                                },
-                                "required": ["headline", "body"],
-                            },
-                        },
-                        "checklist": {
-                            "type": "array",
-                            "items": {"type": "string"},
-                        },
-                        "imagePrompts": {
-                            "type": "array",
-                            "minItems": 3,
-                            "maxItems": 3,
-                            "items": {"type": "string"},
-                        },
-                    },
-                    "required": ["campaignConcept", "variants", "checklist", "imagePrompts"],
-                },
-            },
-        },
-        "max_output_tokens": 800,
+        "response_format": {"type": "json_object"},
+        "max_tokens": 800,
         "temperature": 0.8,
     }
 
@@ -154,7 +115,7 @@ def create_campaign_concept(brief: CampaignBrief) -> dict:
 
         try:
             response = requests.post(
-                "https://api.openai.com/v1/responses",
+                "https://api.openai.com/v1/chat/completions",
                 headers={
                     "Authorization": f"Bearer {OPENAI_API_KEY}",
                     "Content-Type": "application/json",
@@ -165,10 +126,9 @@ def create_campaign_concept(brief: CampaignBrief) -> dict:
             response.raise_for_status()
             data = response.json()
 
-            output = parse_responses_output(data)
-            if output is None:
-                raise RuntimeError("Failed to parse structured response from OpenAI.")
- 
+            content = data["choices"][0]["message"]["content"]
+            output = json.loads(content)
+
             # The text model only produces copy + image *prompts*.
             # Real image generation is left to the user via the returned prompts
             # (e.g. Bing Image Creator). This keeps the endpoint 100% text-only
