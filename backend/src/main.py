@@ -2,8 +2,8 @@ import json
 import os
 from pathlib import Path
 from fastapi import FastAPI, HTTPException
-from fastapi.responses import FileResponse, JSONResponse
-from fastapi.staticfiles import StaticFiles
+from fastapi.responses import JSONResponse
+from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
 import requests
 from dotenv import load_dotenv
@@ -12,16 +12,28 @@ from backend.src.opentelemetry_setup import campaigns_generated, openai_api_erro
 load_dotenv()
 
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
-# Permitir funcionamiento sin API Key usando simulador gratuito
-# Force simulator mode until we have a proper GPT-4o key
-USE_SIMULATOR = True  # Force simulator for now
-# USE_SIMULATOR = not OPENAI_API_KEY or OPENAI_API_KEY == "sk-test-key"
+# Use the real OpenAI API when a key is present; fall back to the simulator otherwise.
+USE_SIMULATOR = not OPENAI_API_KEY or OPENAI_API_KEY == "sk-test-key"
 
-BASE_DIR = Path(__file__).resolve().parent
-FRONTEND_DIR = BASE_DIR.parent.parent  # Apuntar al directorio raíz del proyecto
+# Allowed CORS origins (frontend on Vercel + local dev).
+CORS_ORIGINS = [
+    o.strip()
+    for o in os.getenv(
+        "CORS_ORIGINS",
+        "https://campaign-studio-new.vercel.app,http://localhost:8080,http://localhost:3000",
+    ).split(",")
+    if o.strip()
+]
 
 app = FastAPI(title="Campaign Concept Studio API", version="0.1.0")
-app.mount("/static", StaticFiles(directory=str(FRONTEND_DIR)), name="static")
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=CORS_ORIGINS,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 
 class CampaignBrief(BaseModel):
@@ -37,10 +49,14 @@ async def health():
     return {"status": "ok", "source": "campaign-studio"}
 
 
-@app.get("/")
-async def serve_frontend():
-    index_path = FRONTEND_DIR / "index.html"
-    return FileResponse(index_path)
+@app.get("/api/config")
+async def config():
+    """Expose runtime config so the frontend knows which mode is active."""
+    return {
+        "mode": "simulator" if USE_SIMULATOR else "openai",
+        "model": "gpt-4o",
+        "cors_origins": CORS_ORIGINS,
+    }
 
 
 @app.post("/api/generate")
