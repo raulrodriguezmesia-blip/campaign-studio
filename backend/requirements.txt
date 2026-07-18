@@ -2,6 +2,9 @@ fastapi==0.109.0
 uvicorn[standard]==0.23.2
 requests==2.31.0
 python-dotenv==1.0.0
-opentelemetry-sdk==1.43.0
-opentelemetry-exporter-otlp==1.43.0
-opentelemetry-instrumentation-requests==0.64b0
+# OpenTelemetry is OPTIONAL. The app falls back to no-op stubs if these
+# are not installed, so we keep them unpinned/optional to avoid build
+# failures on platforms (e.g. Render free tier) where resolution is strict.
+opentelemetry-sdk
+opentelemetry-exporter-otlp
+opentelemetry-instrumentation-requests
