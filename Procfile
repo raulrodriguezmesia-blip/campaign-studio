@@ -1,1 +1,1 @@
-web: uvicorn backend.src.main:app --host 0.0.0.0 --port $PORT
+web: uvicorn wsgi:app --host 0.0.0.0 --port $PORT
