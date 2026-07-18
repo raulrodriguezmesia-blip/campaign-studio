@@ -168,13 +168,13 @@ def create_campaign_concept(brief: CampaignBrief) -> dict:
             output = parse_responses_output(data)
             if output is None:
                 raise RuntimeError("Failed to parse structured response from OpenAI.")
-
-            image_urls = []
+ 
+            # The text model only produces copy + image *prompts*.
+            # Real image generation is left to the user via the returned prompts
+            # (e.g. Bing Image Creator). This keeps the endpoint 100% text-only
+            # and avoids any image-input model errors.
             prompts = output.get("imagePrompts", [])
-            for prompt in prompts[:3]:
-                img_result = generate_image(prompt)
-                image_urls.append(img_result)
-            
+
             campaigns_generated.add(1)
             span.set_attribute("campaign.variants_count", len(output.get("variants", [])))
 
@@ -183,7 +183,7 @@ def create_campaign_concept(brief: CampaignBrief) -> dict:
                 "variants": output.get("variants", []),
                 "checklist": output.get("checklist", []),
                 "imagePrompts": prompts,
-                "images": image_urls,
+                "images": [],
             }
         except Exception as exc:
             openai_api_errors.add(1, {"error": str(exc)})
@@ -222,31 +222,6 @@ def parse_responses_output(data: dict) -> dict | None:
                 except json.JSONDecodeError:
                     continue
     return None
-
-
-def generate_image(prompt: str) -> dict:
-    """Generar imagen usando Bing Image Creator (gratuito) o simulador"""
-    # Intentar con Bing Image Creator (gratuito)
-    try:
-        # URL de Bing Image Creator
-        bing_url = "https://www.bing.com/images/create"
-        
-        # Nota: Para uso real, necesitarías:
-        # 1. Una cuenta Microsoft con acceso a Bing Image Creator
-        # 2. Implementar scraping o API si está disponible
-        
-        # Por ahora, retornamos un placeholder
-        return {
-            "prompt": prompt,
-            "url": None,
-            "note": "Usar Bing Image Creator manualmente: https://www.bing.com/images/create"
-        }
-    except Exception as e:
-        return {
-            "prompt": prompt,
-            "url": None,
-            "error": str(e)
-        }
 
 
 def create_campaign_simulator(brief: CampaignBrief) -> dict:
