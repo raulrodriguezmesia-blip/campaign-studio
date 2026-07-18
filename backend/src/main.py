@@ -12,8 +12,19 @@ from backend.src.opentelemetry_setup import campaigns_generated, openai_api_erro
 load_dotenv()
 
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
-# Use the real OpenAI API when a key is present; fall back to the simulator otherwise.
-USE_SIMULATOR = not OPENAI_API_KEY or OPENAI_API_KEY == "sk-test-key"
+GROQ_API_KEY = os.getenv("GROQ_API_KEY")
+AI_PROVIDER = os.getenv("AI_PROVIDER", "openai").strip().lower()
+
+if AI_PROVIDER == "groq":
+    AI_API_KEY = GROQ_API_KEY
+    AI_BASE_URL = os.getenv("AI_BASE_URL", "https://api.groq.com/openai/v1").rstrip("/")
+    AI_MODEL = os.getenv("AI_MODEL", "llama-3.1-8b-instruct")
+    USE_SIMULATOR = not AI_API_KEY
+else:
+    AI_API_KEY = OPENAI_API_KEY
+    AI_BASE_URL = os.getenv("AI_BASE_URL", "https://api.openai.com/v1").rstrip("/")
+    AI_MODEL = os.getenv("AI_MODEL", "gpt-4o-mini")
+    USE_SIMULATOR = not AI_API_KEY or AI_API_KEY == "sk-test-key"
 
 # Allowed CORS origins (frontend on Vercel + local dev).
 CORS_ORIGINS = [
@@ -53,8 +64,8 @@ async def health():
 async def config():
     """Expose runtime config so the frontend knows which mode is active."""
     return {
-        "mode": "simulator" if USE_SIMULATOR else "openai",
-        "model": "gpt-4o-mini",
+        "mode": "simulator" if USE_SIMULATOR else AI_PROVIDER,
+        "model": AI_MODEL,
         "cors_origins": CORS_ORIGINS,
     }
 
@@ -99,7 +110,7 @@ def create_campaign_concept(brief: CampaignBrief) -> dict:
     )
 
     response_payload = {
-        "model": "gpt-4o-mini",
+        "model": AI_MODEL,
         "messages": [
             {"role": "system", "content": system_prompt},
             {"role": "user", "content": user_prompt},
@@ -115,9 +126,9 @@ def create_campaign_concept(brief: CampaignBrief) -> dict:
 
         try:
             response = requests.post(
-                "https://api.openai.com/v1/chat/completions",
+                f"{AI_BASE_URL}/chat/completions",
                 headers={
-                    "Authorization": f"Bearer {OPENAI_API_KEY}",
+                    "Authorization": f"Bearer {AI_API_KEY}",
                     "Content-Type": "application/json",
                 },
                 json=response_payload,
