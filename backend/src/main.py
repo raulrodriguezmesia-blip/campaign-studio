@@ -54,13 +54,13 @@ async def config():
     """Expose runtime config so the frontend knows which mode is active."""
     return {
         "mode": "simulator" if USE_SIMULATOR else "openai",
-        "model": "gpt-4o",
+        "model": "gpt-4o-mini",
         "cors_origins": CORS_ORIGINS,
     }
 
 
-    @app.post("/api/generate")
-    async def generate_campaign(brief: CampaignBrief):
+@app.post("/api/generate")
+async def generate_campaign(brief: CampaignBrief):
         try:
             response_payload = create_campaign_concept(brief)
             return JSONResponse(content=response_payload)
