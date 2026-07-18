@@ -54,6 +54,25 @@ const rewriteLocal = (attr, ext, min) => {
 rewriteLocal('href', 'css', 'min.css');
 rewriteLocal('src', 'js', 'min.js');
 
+// --- Generate frontend/config.js with the API base URL ---
+// VITE_API_URL is provided by the build environment (e.g. Vercel env var).
+// Falls back to the local simulator URL so the site works without a backend.
+// Default to the live Render API; override with VITE_API_URL when set.
+const DEFAULT_API = 'https://campaign-studio-api.onrender.com';
+const apiBase =
+  process.env.VITE_API_URL && process.env.VITE_API_URL.trim()
+    ? process.env.VITE_API_URL.trim().replace(/\/+$/, '') + '/api'
+    : DEFAULT_API + '/api';
+const configJs = `window.APP_CONFIG = { apiBase: ${JSON.stringify(apiBase)} };\n`;
+fs.writeFileSync(path.join(distDir, 'config.js'), configJs, 'utf8');
+console.log(`[build-html] -> ${path.join(distDir, 'config.js')} (apiBase: ${apiBase})`);
+
+// Inject config.js BEFORE the app bundle so window.APP_CONFIG is ready.
+html = html.replace(
+  /(<script[^>]*src=["']app\.min\.js["'][^>]*><\/script>)/i,
+  '<script src="config.js"></script>\n    $1'
+);
+
 const outHtml = path.join(distDir, 'index.html');
 fs.writeFileSync(outHtml, html, 'utf8');
 console.log(`[build-html] -> ${outHtml}`);

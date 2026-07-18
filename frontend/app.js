@@ -5,7 +5,12 @@
 
 class CampaignStudio {
     constructor() {
-        this.apiClient = new AppComponents.APIClient('http://localhost:8000/api');
+        // API base URL is provided by frontend/config.js (generated at build time
+        // from the VITE_API_URL env var). Falls back to local simulator.
+        const apiBase =
+            (window.APP_CONFIG && window.APP_CONFIG.apiBase) ||
+            'http://localhost:8000/api';
+        this.apiClient = new AppComponents.APIClient(apiBase);
         this.campaignStore = new AppComponents.CampaignStore(this.apiClient);
         this.charts = {};
         this.campaigns = [];
