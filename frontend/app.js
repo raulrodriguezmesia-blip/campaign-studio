@@ -239,19 +239,31 @@ class CampaignStudio {
                 `;
                 promptsContainer.appendChild(div);
                 
-                // Agregar event listener para copiar prompt individual
                 div.querySelector('.copy-prompt').addEventListener('click', (e) => {
                     this.copyToClipboard(e.target.dataset.prompt);
                 });
             });
-            
-            // Mensaje para Bing Image Creator
-            const noteDiv = document.createElement('div');
-            noteDiv.className = 'prompt-note';
-            noteDiv.innerHTML = `
-                <p class="note-text">💡 Copia estos prompts y pégalos en <a href="https://www.bing.com/images/create" target="_blank">Bing Image Creator</a> para generar las imágenes</p>
-            `;
-            promptsContainer.appendChild(noteDiv);
+        }
+
+        // Generated images
+        const imagesContainer = document.getElementById('images-container');
+        if (imagesContainer) {
+            imagesContainer.innerHTML = '';
+            const images = result.images || [];
+            if (images.length === 0) {
+                imagesContainer.innerHTML = '<p class="note-text">No hay imágenes generadas para esta campaña.</p>';
+            } else {
+                images.forEach(img => {
+                    const div = document.createElement('div');
+                    div.className = 'image-item';
+                    if (img.url) {
+                        div.innerHTML = `<img src="${img.url}" alt="${img.prompt || ''}" loading="lazy">`;
+                    } else {
+                        div.innerHTML = `<p class="note-text">Imagen no disponible: ${img.error || img.note || 'sin datos'}</p>`;
+                    }
+                    imagesContainer.appendChild(div);
+                });
+            }
         }
         
         // Scroll to result
@@ -266,8 +278,9 @@ class CampaignStudio {
         }
         
         const totalImages = document.getElementById('total-images');
-        if (totalImages && result.imagePrompts) {
-            totalImages.textContent = parseInt(totalImages.textContent || '0') + result.imagePrompts.length;
+        if (totalImages && result.images) {
+            const realImages = result.images.filter(img => img && img.url).length;
+            totalImages.textContent = parseInt(totalImages.textContent || '0') + realImages;
         }
         
         // Actualizar costos

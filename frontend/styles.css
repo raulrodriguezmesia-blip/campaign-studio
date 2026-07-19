@@ -772,13 +772,28 @@ body::before {
     }
 }
 
-/* Bing Image Creator Note */
-.prompt-note {
-    margin-top: 16px;
-    padding: 12px;
-    background: rgba(59, 130, 246, 0.1);
-    border-radius: 8px;
-    border-left: 3px solid var(--primary);
+/* Image generation section */
+.images-section {
+    margin-top: 24px;
+}
+
+.images-section h4 {
+    color: var(--text);
+    font-size: 1rem;
+    margin-bottom: 12px;
+}
+
+.image-item {
+    margin-bottom: 12px;
+}
+
+.image-item img {
+    width: 100%;
+    max-width: 100%;
+    height: auto;
+    border-radius: 12px;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    background: #0b1020;
 }
 
 .note-text {

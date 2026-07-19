@@ -277,35 +277,45 @@ def generate_image_with_replicate(prompt: str) -> dict:
             "note": "Replicate API token not configured.",
         }
 
-    # Start async prediction
+    headers = {
+        "Authorization": f"Token {REPLICATE_API_TOKEN}",
+        "Content-Type": "application/json",
+    }
+
+    # Use the public flux-schnell model endpoint
+    payload = {
+        "model": "black-forest-labs/flux-schnell",
+        "input": {
+            "prompt": prompt,
+            "width": 1024,
+            "height": 1024,
+            "num_inference_steps": 4,
+        },
+    }
+
     start = requests.post(
         "https://api.replicate.com/v1/predictions",
-        headers={
-            "Authorization": f"Token {REPLICATE_API_TOKEN}",
-            "Content-Type": "application/json",
-        },
-        json={
-            "version": "fc251c4d7d7e5477c9b7b2e7b7f7d7e5477c9b7b",
-            "input": {
-                "prompt": prompt,
-                "width": 1024,
-                "height": 1024,
-                "num_inference_steps": 4,
-            },
-        },
+        headers=headers,
+        json=payload,
         timeout=30,
     )
-    start.raise_for_status()
-    prediction = start.json()
 
-    # Poll until ready
+    if start.status_code != 200:
+        return {
+            "prompt": prompt,
+            "url": None,
+            "error": f"Replicate start failed {start.status_code}: {start.text}",
+        }
+
+    prediction = start.json()
     get_url = prediction.get("urls", {}).get("get")
     if not get_url:
         return {"prompt": prompt, "url": None, "error": "Missing prediction URL from Replicate."}
 
-    for _ in range(30):
-        status = requests.get(get_url, headers={"Authorization": f"Token {REPLICATE_API_TOKEN}"}, timeout=30)
-        status.raise_for_status()
+    for _ in range(60):
+        status = requests.get(get_url, headers=headers, timeout=30)
+        if status.status_code != 200:
+            return {"prompt": prompt, "url": None, "error": f"Replicate poll failed {status.status_code}: {status.text}"}
         data = status.json()
         if data.get("status") == "succeeded":
             output = data.get("output") or {}
