@@ -282,9 +282,8 @@ def generate_image_with_replicate(prompt: str) -> dict:
         "Content-Type": "application/json",
     }
 
-    # Use the public flux-schnell model endpoint
     payload = {
-        "model": "black-forest-labs/flux-schnell",
+        "version": "f97ca4abbe8264a567cec4541c137c1e4b84b5c6e4293b4e2c24039dc7d029c7",
         "input": {
             "prompt": prompt,
             "width": 1024,
