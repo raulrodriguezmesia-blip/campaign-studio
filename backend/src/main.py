@@ -18,7 +18,7 @@ AI_PROVIDER = os.getenv("AI_PROVIDER", "openai").strip().lower()
 if AI_PROVIDER == "groq":
     AI_API_KEY = GROQ_API_KEY
     AI_BASE_URL = os.getenv("AI_BASE_URL", "https://api.groq.com/openai/v1").rstrip("/")
-    AI_MODEL = os.getenv("AI_MODEL", "mixtral-8x7b-32768")
+    AI_MODEL = os.getenv("AI_MODEL", "llama-3.1-8b-instant")
     USE_SIMULATOR = not AI_API_KEY
 else:
     AI_API_KEY = OPENAI_API_KEY
