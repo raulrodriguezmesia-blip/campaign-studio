@@ -13,7 +13,9 @@ load_dotenv()
 
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 GROQ_API_KEY = os.getenv("GROQ_API_KEY")
+REPLICATE_API_TOKEN = os.getenv("REPLICATE_API_TOKEN")
 AI_PROVIDER = os.getenv("AI_PROVIDER", "openai").strip().lower()
+IMAGE_PROVIDER = os.getenv("IMAGE_PROVIDER", "replicate").strip().lower()
 
 if AI_PROVIDER == "groq":
     AI_API_KEY = GROQ_API_KEY
@@ -70,21 +72,33 @@ async def config():
     }
 
 
+class ImageRequest(BaseModel):
+    prompt: str = Field(..., min_length=5, max_length=2000)
+
+
+@app.post("/api/generate-image")
+async def generate_image_endpoint(request: ImageRequest):
+    try:
+        result = generate_image_with_replicate(request.prompt)
+        return JSONResponse(content=result)
+    except Exception as exc:
+        raise HTTPException(status_code=500, detail=str(exc))
+
+
 @app.post("/api/generate")
 async def generate_campaign(brief: CampaignBrief):
+    try:
+        response_payload = create_campaign_concept(brief)
+        return JSONResponse(content=response_payload)
+    except Exception as exc:
+        detail = str(exc)
         try:
-            response_payload = create_campaign_concept(brief)
-            return JSONResponse(content=response_payload)
-        except Exception as exc:
-            detail = str(exc)
-            # Try to expose OpenAI's real error body for debugging.
-            try:
-                if hasattr(exc, "response") and exc.response is not None:
-                    body = exc.response.json()
-                    detail = body.get("error", {}).get("message") or detail
-            except Exception:
-                pass
-            raise HTTPException(status_code=500, detail=detail)
+            if hasattr(exc, "response") and exc.response is not None:
+                body = exc.response.json()
+                detail = body.get("error", {}).get("message") or detail
+        except Exception:
+            pass
+        raise HTTPException(status_code=500, detail=detail)
 
 
 def create_campaign_concept(brief: CampaignBrief) -> dict:
@@ -140,11 +154,17 @@ def create_campaign_concept(brief: CampaignBrief) -> dict:
             content = data["choices"][0]["message"]["content"]
             output = json.loads(content)
 
-            # The text model only produces copy + image *prompts*.
-            # Real image generation is left to the user via the returned prompts
-            # (e.g. Bing Image Creator). This keeps the endpoint 100% text-only
-            # and avoids any image-input model errors.
             prompts = output.get("imagePrompts", [])
+
+            # If Replicate is configured, generate images for the prompts.
+            images = []
+            if REPLICATE_API_TOKEN and prompts:
+                for prompt in prompts[:3]:
+                    try:
+                        img = generate_image_with_replicate(prompt)
+                        images.append(img)
+                    except Exception as exc:
+                        images.append({"prompt": prompt, "url": None, "error": str(exc)})
 
             campaigns_generated.add(1)
             span.set_attribute("campaign.variants_count", len(output.get("variants", [])))
@@ -154,7 +174,7 @@ def create_campaign_concept(brief: CampaignBrief) -> dict:
                 "variants": output.get("variants", []),
                 "checklist": output.get("checklist", []),
                 "imagePrompts": prompts,
-                "images": [],
+                "images": images,
             }
         except Exception as exc:
             openai_api_errors.add(1, {"error": str(exc)})
@@ -246,3 +266,57 @@ def create_campaign_simulator(brief: CampaignBrief) -> dict:
         "images": [],
         "note": "Para generar imágenes reales, visita: https://www.bing.com/images/create"
     }
+
+
+def generate_image_with_replicate(prompt: str) -> dict:
+    """Generate an image via Replicate API and return the image URL."""
+    if not REPLICATE_API_TOKEN:
+        return {
+            "prompt": prompt,
+            "url": None,
+            "note": "Replicate API token not configured.",
+        }
+
+    # Start async prediction
+    start = requests.post(
+        "https://api.replicate.com/v1/predictions",
+        headers={
+            "Authorization": f"Token {REPLICATE_API_TOKEN}",
+            "Content-Type": "application/json",
+        },
+        json={
+            "version": "fc251c4d7d7e5477c9b7b2e7b7f7d7e5477c9b7b",
+            "input": {
+                "prompt": prompt,
+                "width": 1024,
+                "height": 1024,
+                "num_inference_steps": 4,
+            },
+        },
+        timeout=30,
+    )
+    start.raise_for_status()
+    prediction = start.json()
+
+    # Poll until ready
+    get_url = prediction.get("urls", {}).get("get")
+    if not get_url:
+        return {"prompt": prompt, "url": None, "error": "Missing prediction URL from Replicate."}
+
+    for _ in range(30):
+        status = requests.get(get_url, headers={"Authorization": f"Token {REPLICATE_API_TOKEN}"}, timeout=30)
+        status.raise_for_status()
+        data = status.json()
+        if data.get("status") == "succeeded":
+            output = data.get("output") or {}
+            url = output.get("url") or (isinstance(output, str) and output) or None
+            if not url and isinstance(data.get("output"), list) and data["output"]:
+                url = data["output"][0]
+            return {"prompt": prompt, "url": url}
+        if data.get("status") in ("failed", "canceled"):
+            return {"prompt": prompt, "url": None, "error": data.get("error") or f"Replicate status {data.get('status')}"}
+        import time
+        time.sleep(2)
+
+    return {"prompt": prompt, "url": None, "error": "Replicate prediction timed out."}
+
