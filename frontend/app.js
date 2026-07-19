@@ -262,19 +262,17 @@ class CampaignStudio {
                     card.className = 'image-card';
                     
                     if (img.url) {
-                        card.innerHTML = `
-                            <img src="${img.url}" alt="${img.prompt || ''}" loading="lazy">
+                        card.innerHTML = `\n                            <img src="${img.url}" alt="${img.prompt || ''}" loading="lazy">
                             <div class="image-meta">
                                 <span class="image-provider">${img.provider || 'AI'}</span>
                                 <button class="retry-btn" data-prompt="${img.prompt || ''}" data-index="${index}">🔄</button>
                             </div>
                         `;
                     } else {
-                        card.innerHTML = `
-                            <div class="image-error">
+                        card.innerHTML = `\n                            <div class=\"image-error\">
                                 <p>Imagen no disponible</p>
-                                <p class="image-error-detail">${img.error || img.note || 'sin datos'}</p>
-                                <button class="retry-btn" data-prompt="${img.prompt || ''}" data-index="${index}">Reintentar</button>
+                                <p class=\"image-error-detail\">${img.error || img.note || 'Error al generar imagen'}</p>
+                                <button class=\"retry-btn\" data-prompt=\"${img.prompt || ''}\" data-index=\"${index}\">Reintentar</button>
                             </div>
                         `;
                     }
@@ -294,6 +292,11 @@ class CampaignStudio {
                     });
                 });
             }
+        }
+        
+        // Show notification if there's an error in result
+        if (result.error) {
+            this.showNotification(result.error, 'error');
         }
         
         // Scroll to result

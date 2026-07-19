@@ -33,7 +33,10 @@ async function run() {
   const result = await terser.minify(sources, {
     compress: true,
     mangle: true,
-    sourceMap: false,
+    // sourceMap: {
+    //   filename: 'app.min.js',
+    //   url: 'app.min.js.map'
+    // },
   });
 
   if (result.error) {
