@@ -162,9 +162,19 @@ def create_campaign_concept(brief: CampaignBrief) -> dict:
                 for prompt in prompts[:3]:
                     try:
                         img = generate_image_with_replicate(prompt)
-                        images.append(img)
+                        if img.get("url"):
+                            images.append(img)
+                        else:
+                            # fallback to free provider if Replicate fails
+                            fallback = generate_image_with_pollinations(prompt)
+                            images.append(fallback)
                     except Exception as exc:
-                        images.append({"prompt": prompt, "url": None, "error": str(exc)})
+                        fallback = generate_image_with_pollinations(prompt)
+                        images.append(fallback)
+            else:
+                # No Replicate token configured: use free provider directly.
+                for prompt in prompts[:3]:
+                    images.append(generate_image_with_pollinations(prompt))
 
             campaigns_generated.add(1)
             span.set_attribute("campaign.variants_count", len(output.get("variants", [])))
@@ -274,7 +284,8 @@ def generate_image_with_replicate(prompt: str) -> dict:
         return {
             "prompt": prompt,
             "url": None,
-            "note": "Replicate API token not configured.",
+            "provider": "none",
+            "error": "Replicate API token not configured.",
         }
 
     headers = {
@@ -292,40 +303,59 @@ def generate_image_with_replicate(prompt: str) -> dict:
         },
     }
 
-    start = requests.post(
-        "https://api.replicate.com/v1/predictions",
-        headers=headers,
-        json=payload,
-        timeout=30,
-    )
+    try:
+        start = requests.post(
+            "https://api.replicate.com/v1/predictions",
+            headers=headers,
+            json=payload,
+            timeout=30,
+        )
+    except Exception as exc:
+        return {"prompt": prompt, "url": None, "provider": "replicate", "error": str(exc)}
 
     if start.status_code != 200:
         return {
             "prompt": prompt,
             "url": None,
+            "provider": "replicate",
             "error": f"Replicate start failed {start.status_code}: {start.text}",
         }
 
     prediction = start.json()
     get_url = prediction.get("urls", {}).get("get")
     if not get_url:
-        return {"prompt": prompt, "url": None, "error": "Missing prediction URL from Replicate."}
+        return {"prompt": prompt, "url": None, "provider": "replicate", "error": "Missing prediction URL from Replicate."}
 
-    for _ in range(60):
-        status = requests.get(get_url, headers=headers, timeout=30)
-        if status.status_code != 200:
-            return {"prompt": prompt, "url": None, "error": f"Replicate poll failed {status.status_code}: {status.text}"}
-        data = status.json()
-        if data.get("status") == "succeeded":
-            output = data.get("output") or {}
-            url = output.get("url") or (isinstance(output, str) and output) or None
-            if not url and isinstance(data.get("output"), list) and data["output"]:
-                url = data["output"][0]
-            return {"prompt": prompt, "url": url}
-        if data.get("status") in ("failed", "canceled"):
-            return {"prompt": prompt, "url": None, "error": data.get("error") or f"Replicate status {data.get('status')}"}
-        import time
-        time.sleep(2)
+    try:
+        for _ in range(60):
+            status = requests.get(get_url, headers=headers, timeout=30)
+            if status.status_code != 200:
+                return {"prompt": prompt, "url": None, "provider": "replicate", "error": f"Replicate poll failed {status.status_code}: {status.text}"}
+            data = status.json()
+            if data.get("status") == "succeeded":
+                output = data.get("output") or {}
+                url = output.get("url") or (isinstance(output, str) and output) or None
+                if not url and isinstance(data.get("output"), list) and data["output"]:
+                    url = data["output"][0]
+                if url:
+                    return {"prompt": prompt, "url": url, "provider": "replicate"}
+                return {"prompt": prompt, "url": None, "provider": "replicate", "error": "Replicate returned no image URL."}
+            if data.get("status") in ("failed", "canceled"):
+                return {"prompt": prompt, "url": None, "provider": "replicate", "error": data.get("error") or f"Replicate status {data.get('status')}"}
+            import time
+            time.sleep(2)
+    except Exception as exc:
+        return {"prompt": prompt, "url": None, "provider": "replicate", "error": str(exc)}
 
-    return {"prompt": prompt, "url": None, "error": "Replicate prediction timed out."}
+    return {"prompt": prompt, "url": None, "provider": "replicate", "error": "Replicate prediction timed out."}
+
+
+def generate_image_with_pollinations(prompt: str) -> dict:
+    """Free fallback image provider using Pollinations.ai (no auth required)."""
+    try:
+        safe_prompt = requests.utils.quote(prompt)
+        url = f"https://image.pollinations.ai/prompt/{safe_prompt}"
+        return {"prompt": prompt, "url": url, "provider": "pollinations"}
+    except Exception as exc:
+        return {"prompt": prompt, "url": None, "provider": "pollinations", "error": str(exc)}
 
