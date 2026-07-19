@@ -283,7 +283,7 @@ def generate_image_with_replicate(prompt: str) -> dict:
     }
 
     payload = {
-        "version": "f97ca4abbe8264a567cec4541c137c1e4b84b5c6e4293b4e2c24039dc7d029c7",
+        "version": "c846a69991daf4c0e5d016514849d14ee5b2e6846ce6b9d6f21369e564cfe51e",
         "input": {
             "prompt": prompt,
             "width": 1024,
