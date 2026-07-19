@@ -245,29 +245,124 @@ class CampaignStudio {
             });
         }
 
-        // Generated images
+        // Generated images - with loading and retry
         const imagesContainer = document.getElementById('images-container');
         if (imagesContainer) {
             imagesContainer.innerHTML = '';
             const images = result.images || [];
-            if (images.length === 0) {
-                imagesContainer.innerHTML = '<p class="note-text">No hay imágenes generadas para esta campaña.</p>';
-            } else {
-                images.forEach(img => {
-                    const div = document.createElement('div');
-                    div.className = 'image-item';
+            
+            if (images.length === 0 && !result._loadingImages) {
+                imagesContainer.innerHTML = '<p class="note-text">Generando imágenes...</p>';
+            } else if (images.length > 0) {
+                const grid = document.createElement('div');
+                grid.className = 'images-grid';
+                
+                images.forEach((img, index) => {
+                    const card = document.createElement('div');
+                    card.className = 'image-card';
+                    
                     if (img.url) {
-                        div.innerHTML = `<img src="${img.url}" alt="${img.prompt || ''}" loading="lazy">`;
+                        card.innerHTML = `
+                            <img src="${img.url}" alt="${img.prompt || ''}" loading="lazy">
+                            <div class="image-meta">
+                                <span class="image-provider">${img.provider || 'AI'}</span>
+                                <button class="retry-btn" data-prompt="${img.prompt || ''}" data-index="${index}">🔄</button>
+                            </div>
+                        `;
                     } else {
-                        div.innerHTML = `<p class="note-text">Imagen no disponible: ${img.error || img.note || 'sin datos'}</p>`;
+                        card.innerHTML = `
+                            <div class="image-error">
+                                <p>Imagen no disponible</p>
+                                <p class="image-error-detail">${img.error || img.note || 'sin datos'}</p>
+                                <button class="retry-btn" data-prompt="${img.prompt || ''}" data-index="${index}">Reintentar</button>
+                            </div>
+                        `;
                     }
-                    imagesContainer.appendChild(div);
+                    
+                    grid.appendChild(card);
+                });
+                
+                imagesContainer.innerHTML = '';
+                imagesContainer.appendChild(grid);
+                
+                // Add retry listeners
+                imagesContainer.querySelectorAll('.retry-btn').forEach(btn => {
+                    btn.addEventListener('click', (e) => {
+                        const prompt = e.target.dataset.prompt;
+                        const index = parseInt(e.target.dataset.index);
+                        this.retryImage(prompt, index);
+                    });
                 });
             }
         }
         
         // Scroll to result
         resultCard.scrollIntoView({ behavior: 'smooth' });
+    }
+
+    async retryImage(prompt, index) {
+        const imagesContainer = document.getElementById('images-container');
+        if (!imagesContainer) return;
+        
+        // Find the image card to update
+        const cards = imagesContainer.querySelectorAll('.image-card');
+        const targetCard = cards[index];
+        if (targetCard) {
+            targetCard.innerHTML = '<div class="image-loading">Generando imagen...</div>';
+        }
+        
+        try {
+            const response = await fetch(`${window.APP_CONFIG?.apiBase || 'http://localhost:8000/api'}/generate-image`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ prompt }),
+            });
+            
+            const img = await response.json();
+            
+            if (targetCard && img.url) {
+                targetCard.innerHTML = `
+                    <img src="${img.url}" alt="${img.prompt || ''}" loading="lazy">
+                    <div class="image-meta">
+                        <span class="image-provider">${img.provider || 'AI'}</span>
+                        <button class="retry-btn" data-prompt="${img.prompt || ''}" data-index="${index}">🔄</button>
+                    </div>
+                `;
+                targetCard.querySelector('.retry-btn').addEventListener('click', (e) => {
+                    const prompt = e.target.dataset.prompt;
+                    const index = parseInt(e.target.dataset.index);
+                    this.retryImage(prompt, index);
+                });
+            } else if (targetCard) {
+                targetCard.innerHTML = `
+                    <div class="image-error">
+                        <p>Imagen no disponible</p>
+                        <p class="image-error-detail">${img.error || img.note || 'sin datos'}</p>
+                        <button class="retry-btn" data-prompt="${img.prompt || ''}" data-index="${index}">Reintentar</button>
+                    </div>
+                `;
+                targetCard.querySelector('.retry-btn').addEventListener('click', (e) => {
+                    const prompt = e.target.dataset.prompt;
+                    const index = parseInt(e.target.dataset.index);
+                    this.retryImage(prompt, index);
+                });
+            }
+        } catch (error) {
+            if (targetCard) {
+                targetCard.innerHTML = `
+                    <div class="image-error">
+                        <p>Error al generar imagen</p>
+                        <p class="image-error-detail">${error.message}</p>
+                        <button class="retry-btn" data-prompt="${prompt}" data-index="${index}">Reintentar</button>
+                    </div>
+                `;
+                targetCard.querySelector('.retry-btn').addEventListener('click', (e) => {
+                    const prompt = e.target.dataset.prompt;
+                    const index = parseInt(e.target.dataset.index);
+                    this.retryImage(prompt, index);
+                });
+            }
+        }
     }
     
     updateMetrics(result) {
