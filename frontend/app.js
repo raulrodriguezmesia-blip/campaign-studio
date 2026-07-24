@@ -9,7 +9,7 @@ class CampaignStudio {
         // from the VITE_API_URL env var). Falls back to local simulator.
         const apiBase =
             (window.APP_CONFIG && window.APP_CONFIG.apiBase) ||
-            'http://localhost:8000/api';
+            'https://campaign-studio-api.onrender.com/api';
         this.apiClient = new AppComponents.APIClient(apiBase);
         this.campaignStore = new AppComponents.CampaignStore(this.apiClient);
         this.charts = {};
@@ -315,7 +315,7 @@ class CampaignStudio {
         }
         
         try {
-            const response = await fetch(`${window.APP_CONFIG?.apiBase || 'http://localhost:8000/api'}/generate-image`, {
+            const response = await fetch(`${window.APP_CONFIG?.apiBase || 'https://campaign-studio-api.onrender.com/api'}/generate-image`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ prompt }),

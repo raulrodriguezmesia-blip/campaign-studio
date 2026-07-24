@@ -223,3 +223,38 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 ---
 
 *Campaign Studio - Transforming marketing with AI*
+NOTE: For Node.js v20.18.1, use ="--openssl-legacy-provider" before npm commands due to Vite 8.x compatibility issues. See https://github.com/npm/cli/issues/4828
+
+## ?? Node.js + Vite Compatibility Note
+
+Due to a known issue with Node.js v20.18.1 and Vite 8.x, you need to set an environment variable when running development or build commands:
+
+**PowerShell:**
+`powershell
+="--openssl-legacy-provider"; npm run dev
+`
+**CMD:**
+`cmd\nset NODE_OPTIONS=--openssl-legacy-provider && npm run dev\n`
+
+**To fix permanently:** Upgrade	Node.js to >=20.19.0 or >=22.12.0
+
+[More info: https://github.com/npm/cli/issues/4828](https://github.com/npm/cli/issues/4828)
+## ?? Node.js Version Note
+The project was built with Node.js v20.19.0. If you encounter issues with Node.js v20.18.1 and Vite 8.x, you can either upgrade Node.js to >=20.19.0 (or >=22.12.0) or use the workaround: set NODE_OPTIONS=--openssl-legacy-provider before running npm commands.
+
+Example (PowerShell):
+```powershell
+# Development
+$env:NODE_OPTIONS="--openssl-legacy-provider"; npm run dev
+# Production build
+$env:NODE_OPTIONS="--openssl-legacy-provider"; npm run build
+# Preview
+$env:NODE_OPTIONS="--openssl-legacy-provider"; npm run preview
+```
+
+Example (CMD):
+```batch
+set NODE_OPTIONS=--openssl-legacy-provider && npm run dev
+set NODE_OPTIONS=--openssl-legacy-provider && npm run build
+set NODE_OPTIONS=--openssl-legacy-provider && npm run preview
+```

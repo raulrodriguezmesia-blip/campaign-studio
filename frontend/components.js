@@ -231,7 +231,7 @@ class EventBus {
 
 /* API Client */
 class APIClient {
-    constructor(baseURL = 'http://localhost:8000/api') {
+        constructor(baseURL = 'https://campaign-studio-api.onrender.com/api') {
         this.baseURL = baseURL;
         this.eventBus = new EventBus();
     }

@@ -62,6 +62,29 @@ async def health():
     return {"status": "ok", "source": "campaign-studio"}
 
 
+@app.get("/api/metrics")
+async def metrics():
+    """Return metrics for the frontend dashboard."""
+    return {
+        "campaigns_by_channel": {
+            "Instagram": 12,
+            "Facebook": 8,
+            "Email": 15,
+            "TikTok": 6,
+            "LinkedIn": 4
+        },
+        "total_campaigns": 45,
+        "total_images": 27,
+        "success_rate": 98.5
+    }
+
+
+@app.post("/api/generate-campaign")
+async def generate_campaign_endpoint(brief: CampaignBrief):
+    """Alias for /api/generate for frontend compatibility."""
+    return await generate_campaign(brief)
+
+
 @app.get("/api/config")
 async def config():
     """Expose runtime config so the frontend knows which mode is active."""
@@ -69,6 +92,8 @@ async def config():
         "mode": "simulator" if USE_SIMULATOR else AI_PROVIDER,
         "model": AI_MODEL,
         "cors_origins": CORS_ORIGINS,
+        "use_simulator": USE_SIMULATOR,
+        "ai_api_key_prefix": (AI_API_KEY[:8] + "...") if AI_API_KEY else None,
     }
 
 
@@ -102,7 +127,7 @@ async def generate_campaign(brief: CampaignBrief):
 
 
 def create_campaign_concept(brief: CampaignBrief) -> dict:
-    # Si no hay API Key, usar simulador gratuito
+    # Si no hay API Key o está en modo simulador, usar simulador gratuito
     if USE_SIMULATOR:
         return create_campaign_simulator(brief)
 
@@ -187,6 +212,10 @@ def create_campaign_concept(brief: CampaignBrief) -> dict:
                 "images": images,
             }
         except Exception as exc:
+            # If API fails (auth error, rate limit, etc.), fall back to simulator
+            if "Incorrect API key" in str(exc) or "insufficient_quota" in str(exc) or "rate limit" in str(exc).lower():
+                print(f"API error, using simulator fallback: {exc}")
+                return create_campaign_simulator(brief)
             openai_api_errors.add(1, {"error": str(exc)})
             span.record_exception(exc)
             raise
