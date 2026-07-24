@@ -1,29 +1,55 @@
 # Campaign Studio
 
-![Live](https://img.shields.io/badge/live%20demo-campaign--studio--new.vercel.app-blue)
-![Build Status](https://img.shields.io/badge/build-passing-brightgreen)
-![Docker Ready](https://img.shields.io/badge/docker-ready-blue)
+> AI-powered marketing concept generator with real LLM integration + resilient simulator fallback. Built solo, deployed to production, ready for demo.
+
+![Live Demo](https://img.shields.io/badge/live%20demo-campaign--studio--new.vercel.app-blue)
+![Backend Live](https://img.shields.io/badge/backend-Render-live-brightgreen)
+![Build](https://img.shields.io/badge/build-passing-brightgreen)
+![Docker](https://img.shields.io/badge/docker-ready-blue)
 ![CI/CD](https://img.shields.io/badge/ci--cd-automated-orange)
 ![License](https://img.shields.io/badge/license-MIT-lightgrey)
 
 > 🚀 **Live demo:** https://campaign-studio-new.vercel.app/
+> 🔧 **Backend API:** https://campaign-studio-api.onrender.com/api
+
+---
 
 ## 🌟 Portfolio Highlight
 
 | | |
 |---|---|
-| **What it is** | AI-powered platform that turns a marketing brief into a complete campaign concept (copy variants, launch checklist, image prompts) in seconds. |
+| **What it is** | AI-powered platform that transforms a marketing brief into a complete campaign concept — copy variants, launch checklist, and image prompts — in seconds. |
 | **Role** | Solo full-stack build: frontend, backend, build pipeline, CI/CD and cloud deployment. |
-| **Stack** | FastAPI + Uvicorn (Python), vanilla JS frontend (HTML5/CSS3/ES6+), Chart.js, OpenAI API with a no-key simulator mode. |
-| **Deployment** | Static build (`npm run build` → `dist/`) auto-deployed to Vercel on every push to `main`. |
-| **Highlights** | Production build pipeline (CSS/JS minification), GitHub Actions CI/CD, Docker + Kubernetes manifests, PWA, OpenTelemetry-ready backend, full security hygiene (secrets out of repo). |
+| **Stack** | FastAPI (Python) backend, vanilla JS frontend, Chart.js, Groq/OpenAI-ready API with automatic simulator fallback. |
+| **Deployment** | Static build → Vercel; backend → Render with production-ready FastAPI service. |
+| **Highlights** | Production build pipeline, CI/CD, Docker + Kubernetes manifests, PWA, OpenTelemetry observability, full security hygiene (secrets out of repo). |
 | **Live** | https://campaign-studio-new.vercel.app/ |
 
 ---
 
-## Executive Summary
+## 🚀 30-Second Demo (Recruiter Mode)
 
-**Campaign Studio** is an AI-powered platform that transforms marketing briefs into complete campaign concepts in seconds. Built with a clean full-stack architecture and cloud-native, automated deployment.
+This repo is **demo-safe**: no API keys needed to see it work.
+
+```bash
+# 1. Clone
+git clone https://github.com/raulrodriguezmesia-blip/campaign-studio.git
+cd campaign-studio
+
+# 2. Start frontend (Vite dev server)
+cd frontend
+npm install
+npm run dev
+# → http://localhost:5173
+
+# 3. Start backend (simulator mode, no key needed)
+cd ../backend
+pip install -r requirements.txt
+python -m src.main
+# → http://localhost:8000/api/health
+```
+
+Open http://localhost:5173 → fill the form → generate a campaign → done.
 
 ---
 
@@ -31,11 +57,12 @@
 
 | Feature | Value | Technology |
 |---------|--------|------------|
-| **AI Content Generation** | Campaign concept, copy variants, checklist, image prompts | OpenAI API (simulator mode, no key required) |
-| **Futuristic UI/UX** | Premium neon/dark dashboard | HTML5 / CSS3 / JS ES6+ |
-| **Simulator Mode** | Works without an API key | Vanilla JavaScript |
-| **Real-time Analytics** | Interactive dashboards | Chart.js 4.x |
-| **Local Storage** | Campaigns persist offline | Web Storage API |
+| **AI Content Generation** | Campaign concept, copy variants, checklist, image prompts | Groq / OpenAI ready |
+| **Multi-LLM Support** | Switch providers via env (`AI_PROVIDER=groq` or `openai`) | FastAPI backend |
+| **Auto Fallback** | Never blocks when API fails; falls back to simulator seamlessly | Backend resilience |
+| **Neon Dashboard UI** | Premium dark UI with live metrics | HTML5 / CSS3 / JS ES6+ |
+| **Real-time Analytics** | Interactive charts and campaign history | Chart.js 4.x |
+| **Local Persistence** | Campaigns saved in browser | Web Storage API |
 | **PWA** | Installable, offline shell | manifest.json + service worker |
 
 ---
@@ -47,9 +74,9 @@
 | Runtime | Node.js 20+, Python 3.11 |
 | Frontend | HTML5, CSS3, JavaScript ES6+ (no framework) |
 | Backend | FastAPI, Uvicorn |
-| AI Models | OpenAI API (GPT-4o family) with simulator fallback |
+| AI | Groq (LLaMA 3.1) / OpenAI (GPT-4o family) with simulator fallback |
 | Charts | Chart.js 4.x |
-| Deployment | Vercel (static), Docker, Kubernetes |
+| Deployment | Vercel (static), Render (backend), Docker, Kubernetes |
 | CI/CD | GitHub Actions |
 | Observability | OpenTelemetry (traces + metrics) |
 
@@ -61,11 +88,11 @@
 graph TD
     A[User Browser] --> B[Frontend - vanilla JS + Chart.js]
     B --> C[FastAPI Backend - Uvicorn]
-    C -->|if key set| D[OpenAI API]
-    C -->|no key| E[Simulator Mode]
+    C -->|valid key| D[Groq / OpenAI API]
+    C -->|error / no key| E[Simulator Mode]
     B --> F[LocalStorage]
     C --> G[OpenTelemetry]
-    
+
     style A fill:#3b82f6
     style B fill:#8b5cf6
     style C fill:#ec4899
@@ -77,10 +104,10 @@ graph TD
 
 ## 🎯 Use Cases
 
-1. **Marketing Agencies**: Rapid campaign concept generation
-2. **Product Teams**: Iterative campaign development
-3. **Sales Departments**: Creative support materials
-4. **Startups**: MVP validation with effective campaigns
+1. **Marketing Agencies** — Rapid campaign concept generation
+2. **Product Teams** — Iterative campaign development
+3. **Sales Departments** — Creative support materials
+4. **Startups** — MVP validation with effective campaigns
 
 ---
 
@@ -91,51 +118,43 @@ graph TD
 git clone https://github.com/raulrodriguezmesia-blip/campaign-studio.git
 cd campaign-studio
 
-# Install dependencies
-npm ci
+# Install frontend dependencies
+cd frontend
+npm install
 
 # Run development server
 npm run dev
-# Open: http://localhost:8080
+# Open: http://localhost:5173
 ```
 
 ---
 
 ## 🚀 Deployment
 
-The static frontend is built with `npm run build` (outputs to `dist/`) and auto-deployed to **Vercel** on every push to `main`.
-
-### Vercel (current host)
+### Frontend (Vercel)
 ```bash
-# Local preview of the production build
+# Build
 npm run build
-npx serve dist -p 8080
-
-# Or connect the repo to Vercel (zero-config):
-#   Build Command: npm run build
-#   Output Directory: dist
+# Output directory: dist/
 ```
 
-### Netlify (alternative)
-```bash
-netlify deploy --prod --dir=dist
-```
+### Backend (Render)
+- Service auto-deploys from `main` branch.
+- Configured in Render Dashboard with:
+  - `AI_PROVIDER=groq`
+  - `GROQ_API_KEY=<your_key>`
+  - `USE_SIMULATOR=false`
+- Endpoint base: https://campaign-studio-api.onrender.com/api
 
 ### Docker
 ```bash
-# Build image
 docker build -t campaign-studio .
-
-# Run container
 docker run -p 8080:80 -d campaign-studio
 ```
 
 ### Kubernetes
 ```bash
-# Apply manifests
 kubectl apply -f k8s/
-
-# Access service
 kubectl port-forward svc/campaign-studio 8080:80
 ```
 
@@ -143,38 +162,53 @@ kubectl port-forward svc/campaign-studio 8080:80
 
 ## 📈 Performance
 
-The production build minifies all assets:
-
 | Metric | Value |
 |--------|-------|
-| CSS bundle | ~15 KB (gzip-friendly, minified) |
+| CSS bundle | ~15 KB (minified) |
 | JS bundle | ~19 KB (minified) |
-| Charts | Chart.js 4.x via CDN |
-| PWA | Installable, offline shell |
-
-> Run Lighthouse locally for exact scores: `npx lighthouse https://campaign-studio-new.vercel.app/ --view`
+| Charts | Chart.js 4.x |
+| API fallback | Simulator mode if provider unavailable |
 
 ---
 
-## 🧪 Testing
+## 🧪 API Endpoints
 
-```bash
-# Run tests
-npm test
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/api/health` | GET | Service health check |
+| `/api/config` | GET | Runtime config and active provider |
+| `/api/generate-campaign` | POST | Generate campaign from brief |
+| `/api/generate-image` | POST | Generate image via provider |
+| `/api/metrics` | GET | Dashboard metrics |
 
-# Lint code
-npm run lint
+---
 
-# Type checking
-npm run type-check
-```
+## 🎓 For Recruiters
+
+### Skills Demonstrated
+- ✅ Full-stack architecture (FastAPI + vanilla JS)
+- ✅ AI integration (Groq/OpenAI-ready + automatic simulator fallback)
+- ✅ Production build pipeline (`npm run build` → `dist/`)
+- ✅ Cloud-native deployment (Vercel + Render + Docker + Kubernetes)
+- ✅ CI/CD automation (GitHub Actions)
+- ✅ Resiliency by design (no hard dependency on 3rd-party quota)
+- ✅ Observability (OpenTelemetry traces + metrics)
+- ✅ Security best practices (secrets out of repo, `.gitignore` hygiene)
+
+### Technologies Used
+- **Frontend**: HTML5, CSS3, JavaScript ES6+
+- **Backend**: FastAPI, Python 3.11
+- **AI**: Groq LLaMA 3.1, OpenAI GPT-4o family
+- **Deployment**: Docker, Kubernetes, Vercel, Render
+- **Monitoring**: OpenTelemetry
 
 ---
 
 ## 📚 Documentation
 
-- [IMPLEMENTATION_GUIDE.md](IMPLEMENTATION_GUIDE.md) - Setup and deployment
-- [CASE-STUDY.md](CASE-STUDY.md) - Business impact and architecture
+- [PROJECT_REPORT.md](PROJECT_REPORT.md) — Complete project report
+- [IMPLEMENTATION_GUIDE.md](IMPLEMENTATION_GUIDE.md) — Setup and deployment guide
+- [CASE-STUDY.md](CASE-STUDY.md) — Business impact and architecture
 
 ---
 
@@ -190,71 +224,15 @@ npm run type-check
 
 ## 📫 Contact
 
-**Raul Rodriguez** - [raul.rodriguez@example.com](mailto:raul.rodriguez@example.com)
-
-**LinkedIn** - [linkedin.com/in/raulrodriguez](https://linkedin.com/in/raulrodriguez)
-
----
-
-## 🎓 For Recruiters
-
-### Skills Demonstrated:
-- ✅ Full-stack architecture (FastAPI backend + vanilla-JS frontend)
-- ✅ AI integration (OpenAI API with no-key simulator fallback)
-- ✅ Production build pipeline (CSS/JS minification → `dist/`)
-- ✅ Cloud-native deployment (Vercel auto-deploy + Docker + Kubernetes)
-- ✅ CI/CD pipeline automation (GitHub Actions)
-- ✅ PWA & performance optimization
-- ✅ Security best practices (secrets out of repo, `.gitignore` hygiene)
-
-### Technologies Used:
-- **Frontend**: HTML5, CSS3, JavaScript ES6+
-- **Backend**: FastAPI, Python 3.11
-- **AI**: OpenAI GPT-4o, gpt-image-1
-- **Deployment**: Docker, Kubernetes, Vercel
-- **Monitoring**: OpenTelemetry, Prometheus
+**Raul Rodriguez** — [raul.rodriguez@example.com](mailto:raul.rodriguez@example.com)
+**LinkedIn** — [linkedin.com/in/raulrodriguez](https://linkedin.com/in/raulrodriguez)
 
 ---
 
 ## 📜 License
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+This project is licensed under the MIT License — see the [LICENSE](LICENSE) file for details.
 
 ---
 
-*Campaign Studio - Transforming marketing with AI*
-NOTE: For Node.js v20.18.1, use ="--openssl-legacy-provider" before npm commands due to Vite 8.x compatibility issues. See https://github.com/npm/cli/issues/4828
-
-## ?? Node.js + Vite Compatibility Note
-
-Due to a known issue with Node.js v20.18.1 and Vite 8.x, you need to set an environment variable when running development or build commands:
-
-**PowerShell:**
-`powershell
-="--openssl-legacy-provider"; npm run dev
-`
-**CMD:**
-`cmd\nset NODE_OPTIONS=--openssl-legacy-provider && npm run dev\n`
-
-**To fix permanently:** Upgrade	Node.js to >=20.19.0 or >=22.12.0
-
-[More info: https://github.com/npm/cli/issues/4828](https://github.com/npm/cli/issues/4828)
-## ?? Node.js Version Note
-The project was built with Node.js v20.19.0. If you encounter issues with Node.js v20.18.1 and Vite 8.x, you can either upgrade Node.js to >=20.19.0 (or >=22.12.0) or use the workaround: set NODE_OPTIONS=--openssl-legacy-provider before running npm commands.
-
-Example (PowerShell):
-```powershell
-# Development
-$env:NODE_OPTIONS="--openssl-legacy-provider"; npm run dev
-# Production build
-$env:NODE_OPTIONS="--openssl-legacy-provider"; npm run build
-# Preview
-$env:NODE_OPTIONS="--openssl-legacy-provider"; npm run preview
-```
-
-Example (CMD):
-```batch
-set NODE_OPTIONS=--openssl-legacy-provider && npm run dev
-set NODE_OPTIONS=--openssl-legacy-provider && npm run build
-set NODE_OPTIONS=--openssl-legacy-provider && npm run preview
-```
+*Campaign Studio — Transforming marketing with AI*
