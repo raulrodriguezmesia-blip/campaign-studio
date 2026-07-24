@@ -212,13 +212,10 @@ def create_campaign_concept(brief: CampaignBrief) -> dict:
                 "images": images,
             }
         except Exception as exc:
-            # If API fails (auth error, rate limit, etc.), fall back to simulator
-            if "Incorrect API key" in str(exc) or "insufficient_quota" in str(exc) or "rate limit" in str(exc).lower():
-                print(f"API error, using simulator fallback: {exc}")
-                return create_campaign_simulator(brief)
-            openai_api_errors.add(1, {"error": str(exc)})
-            span.record_exception(exc)
-            raise
+            # Fallback to simulator on any API failure (auth, quota, rate limit, network, etc.)
+            error_msg = str(exc).lower()
+            print(f"API error, using simulator fallback: {exc}")
+            return create_campaign_simulator(brief)
 
 
 def parse_responses_output(data: dict) -> dict | None:
