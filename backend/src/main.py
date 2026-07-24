@@ -50,11 +50,11 @@ app.add_middleware(
 
 
 class CampaignBrief(BaseModel):
-    campaign_brief: str = Field(..., min_length=10, max_length=1000)
-    target_audience: str = Field(..., min_length=5, max_length=500)
-    product_details: str = Field(..., min_length=5, max_length=1000)
-    tone: str = Field(..., min_length=3, max_length=100)
-    channels: str = Field(..., min_length=3, max_length=200)
+    campaign_brief: str = Field(..., min_length=3, max_length=1000)
+    target_audience: str = Field(..., min_length=3, max_length=500)
+    product_details: str = Field(..., min_length=3, max_length=1000)
+    tone: str = Field(..., min_length=2, max_length=100)
+    channels: str = Field(..., min_length=2, max_length=200)
 
 
 @app.get("/api/health")
